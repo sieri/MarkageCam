@@ -9,16 +9,22 @@ class Cam:
         self.capture = None
 
         with open(config_file) as fp:
-            # noinspection PyBroadException
             try:
                 self.config = json.load(fp)
 
-            except:
-                print("unable to load camera config file. Run Calibration")
+            except IOError:
+                print("Unable to load camera config file. Run Calibration")
 
     # activate the camera
     def activate(self):
-        self.capture = cv.VideoCapture(self.config['cameraAccess'])
+        access = self.config['cameraAccess']
+
+        # cast if needed, in the case of a webcam
+        if access is str:
+            if access.isdecimal():
+                access = int(access)
+
+        self.capture = cv.VideoCapture(access)
 
     # get the image with camera correction
     def get_image(self):
