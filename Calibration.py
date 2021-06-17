@@ -1,13 +1,14 @@
 from Capture.CameraCalibration import CamCalib
+import tkinter as tk
 
-if __name__ == '__main__':
 
-    calib = CamCalib()
 
+
+
+def textBased():
     print("=====Camera Calibration script====")
 
     string = str(input("enter camera address:"))
-
 
     print("attempting to open camera")
     calib.set_access(string)
@@ -24,6 +25,18 @@ if __name__ == '__main__':
         print("wrong camera, start over")
         exit(0)
 
-
     input("Press to stop")
     calib.hide_camera()
+
+
+if __name__ == '__main__':
+    window = tk.Tk(screenName="Calibration Window")
+
+    greeting = tk.Label(text="hello wold")
+
+    greeting.pack()
+
+    window.mainloop()
+
+
+
