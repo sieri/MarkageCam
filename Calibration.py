@@ -29,12 +29,23 @@ def textBased():
     calib.hide_camera()
 
 
+def event_btn_confirm(event):
+    print(ent_camera_ip.get())
+
+
 if __name__ == '__main__':
     window = tk.Tk(screenName="Calibration Window")
 
-    greeting = tk.Label(text="hello wold")
+    lbl_camera_IP = tk.Label(text="Enter camera address:")
+    ent_camera_ip = tk.Entry()
+    btn_camera_ip = tk.Button(text="Confirm")
 
-    greeting.pack()
+    lbl_camera_IP.pack()
+    ent_camera_ip.pack()
+    btn_camera_ip.pack()
+
+    btn_camera_ip.bind("<Button-1>", event_btn_confirm)
+
 
     window.mainloop()
 
