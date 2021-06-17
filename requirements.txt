@@ -3,3 +3,4 @@ opencv-python~=4.5.2.52
 pytesseract~=0.3.7
 matplotlib~=3.4.2
 python-dateutil>=2.7
+Pillow~=8.2.0
