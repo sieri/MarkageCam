@@ -1,8 +1,8 @@
 import cv2 as cv
-from Capture.CameraDisplay import Display
+from Capture.CameraDisplay import Display, TkDisplay
+
 
 class CamCalib:
-
     def __init__(self):
         self.access = ""
         self.camera = None
@@ -20,12 +20,13 @@ class CamCalib:
 
         return self.camera.isOpened()
 
-    def show_camera(self):
-        self.display = Display("Calibration Window", self.camera)
+    def show_camera(self, scale):
+        self.display = TkDisplay(self.camera, scale)
         self.display.start()
 
     def hide_camera(self):
         self.display.stop()
 
-
+    def getFrame(self):
+        return self.display.lastFrame
 

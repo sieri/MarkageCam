@@ -1,53 +1,64 @@
 from Capture.CameraCalibration import CamCalib
 import tkinter as tk
 
-calib = CamCalib()
 
-def textBased():
-    print("=====Camera Calibration script====")
+class CalibApp():
+    def __init__(self, root=tk.Tk(), title="Calibration Window", delay=15):
+        self.root = root
+        self.title = title
+        self.delay = delay
 
-    string = str(input("enter camera address:"))
+        self.root.title = self.title
+        self.calib = CamCalib()
+        self.frame = None
 
+        # create widgets
+        self.lbl_camera_IP = tk.Label(text="Enter camera address:")
+        self.ent_camera_ip = tk.Entry()
+        self.btn_camera_ip = tk.Button(text="Confirm")
+        self.cvn_camera_viewfinder = tk.Canvas()
 
-    answer = str(input("Confirm correct camera [Y/N]:", ))
+        # place on the window
+        self.lbl_camera_IP.pack()
+        self.ent_camera_ip.pack()
+        self.btn_camera_ip.pack()
+        self.cvn_camera_viewfinder.pack()
 
-    if not answer.upper() == 'Y':
-        print("wrong camera, start over")
-        exit(0)
+        # bind functionalities
+        self.btn_camera_ip.bind("<Button-1>", self.event_btn_confirm)
 
-    input("Press to stop")
-    calib.hide_camera()
+    def exec(self):
+        self.root.mainloop()
 
+    def event_btn_confirm(self, event):
 
-def event_btn_confirm(event):
+        print("attempting to open camera")
+        self.calib.set_access(self.ent_camera_ip.get())
 
-    print("attempting to open camera")
-    calib.set_access(ent_camera_ip.get())
+        if not self.calib.activate_camera():
+            print("Couldn't open camera")
+            exit(-1)
 
-    if not calib.activate_camera():
-        print("Couldn't open camera")
-        exit(-1)
+        self.calib.show_camera(
+            (
+                self.cvn_camera_viewfinder.winfo_width(),
+                self.cvn_camera_viewfinder.winfo_height()
+            )
+        )
+        self.update_frame()
 
-    calib.show_camera()
+    def update_frame(self):
+        self.frame = self.calib.getFrame()
+        if self.frame is not None:
+
+            self.cvn_camera_viewfinder.create_image(0, 0, image=self.frame, anchor = tk.NW)
+
+        self.root.after(self.delay, self.update_frame)
 
 
 if __name__ == '__main__':
-    window = tk.Tk(screenName="Calibration Window")
-
-    # create widgets
-    lbl_camera_IP = tk.Label(text="Enter camera address:")
-    ent_camera_ip = tk.Entry()
-    btn_camera_ip = tk.Button(text="Confirm")
-
-    # place on the window
-    lbl_camera_IP.pack()
-    ent_camera_ip.pack()
-    btn_camera_ip.pack()
-
-    # bind functionalities
-    btn_camera_ip.bind("<Button-1>", event_btn_confirm)
-
-    window.mainloop()
+    app = CalibApp()
+    app.exec()
 
 
 
