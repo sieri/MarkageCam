@@ -6,6 +6,12 @@ from PIL import Image, ImageTk
 
 
 class DisplayBase:
+    """
+        Base class for the display. runs in a separate thread
+        capture the image and store it in the parameter lastFrame
+
+    """
+
     def __init__(self, capture):
         self.capture = capture
         self.stopped = False
@@ -27,12 +33,14 @@ class DisplayBase:
     def show(self, image):
         self.lastFrame = image
 
-
     def stop(self):
         self.stopped = True
 
 
-class Display(DisplayBase):
+class DebugDisplay(DisplayBase):
+    """
+    Directly display the captured frame in an openCV window
+    """
 
     def __init__(self, win_name : str, capture):
         super().__init__(capture)
@@ -43,6 +51,10 @@ class Display(DisplayBase):
 
 
 class TkDisplay(DisplayBase):
+    """
+    Format the lastFrame for display with tkinter
+    """
+
     def __init__(self, capture, scale):
         super().__init__(capture)
         self.scale = scale
