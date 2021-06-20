@@ -49,12 +49,14 @@ class CamCalib:
         camera still opened
         :return: None
         """
-        self.display.stop()
+        if self.display is not None:
+            self.display.stop()
 
     def close_camera(self):
         """close the camera"""
-        self.hide_camera()
-        self.camera.release()
+        if self.camera is not None:
+            self.hide_camera()
+            self.camera.release()
 
     def get_frame(self) -> tkinter.PhotoImage:
         """
