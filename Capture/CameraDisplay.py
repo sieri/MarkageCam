@@ -1,8 +1,8 @@
 # specific thread that allow for displaying a stream
-import sys
 from threading import Thread
 import cv2 as cv
 from PIL import Image, ImageTk
+
 
 class DisplayBase:
     """
@@ -28,13 +28,11 @@ class DisplayBase:
         while not self.stopped:
             grabbed, image = self.capture.read()
             if grabbed:
-                print("grab")
                 self.show(image)
                 cv.waitKey(1)
             else:
-                print("stop", flush=True)
                 self.stop()
-        print("stopped", flush=True)
+
 
     def show(self, image):
         self.lastFrame = image
@@ -66,6 +64,10 @@ class TkDisplay(DisplayBase):
         self.scale = scale
 
     def show(self, image):
-        self.lastFrame = ImageTk.PhotoImage(
-            Image.fromarray(cv.cvtColor(image, cv.COLOR_BGR2RGB)).resize(self.scale)
-        )
+        try:
+            self.lastFrame = ImageTk.PhotoImage(
+                Image.fromarray(cv.cvtColor(image, cv.COLOR_BGR2RGB)).resize(self.scale)
+            )
+        except AttributeError:
+            # Tk might fail to create the image if called to early or too late
+            pass

@@ -23,8 +23,10 @@ stateText = {
     States.SAVE_CONFIG: ""
 }
 
+
 class CalibApp:
     """Camera calibration window"""
+
     def __init__(self, root=tk.Tk(), title="Calibration Window", delay=15):
         """
         constructor
@@ -83,7 +85,7 @@ class CalibApp:
         if self.state != new_state:
             self.state = new_state
             self.lbl_state_text.configure(
-                text= stateText[self.state]
+                text=stateText[self.state]
             )
 
             # call the new state's entry method
@@ -108,8 +110,7 @@ class CalibApp:
     def on_save_config_entry(self):
         pass
 
-
-    def event_btn_confirm_ip(self, event):
+    def event_btn_confirm_ip(self, event=None):
         """
         Event reacting to the confirmation of the camera address,
         connect to the camera
@@ -143,20 +144,18 @@ class CalibApp:
 
         self.frame = self.calib.get_frame()
         if self.frame is not None:
-            self.cvn_camera_viewfinder.create_image(0, 0, image=self.frame, anchor = tk.NW)
+            self.cvn_camera_viewfinder.create_image(0, 0, image=self.frame, anchor=tk.NW)
 
         # check if continue
         if self.keep_updating:
             self.root.after(self.delay, self.update_frame)
 
     def on_close(self):
+        self.keep_updating = False
         self.calib.close_camera()  # release the camera
-        self.root.destroy()  # actually close the window
+        self.root.after(10, self.root.destroy)  # close the window, delays to give time to the threads to finish
+
 
 if __name__ == '__main__':
     app = CalibApp()
     app.exec()
-    time.sleep(1)
-    print("slept")
-
-
