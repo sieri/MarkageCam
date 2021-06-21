@@ -1,3 +1,5 @@
+import time
+
 from Capture.CameraCalibration import CamCalib
 import tkinter as tk
 from enum import Enum, auto
@@ -55,9 +57,11 @@ class CalibApp:
         self.cvn_camera_viewfinder.pack()
         self.lbl_state_text.pack()
 
-
         # bind functionalities
         self.btn_camera_ip.bind("<Button-1>", self.event_btn_confirm_ip)
+        self.ent_camera_ip.bind("<Return>", self.event_btn_confirm_ip)
+
+        self.root.protocol("WM_DELETE_WINDOW", self.on_close)
 
         # create state machine
         self.transitions = {
@@ -66,8 +70,6 @@ class CalibApp:
             States.CAMERA_CONFIRMED: self.on_camera_confirmed_entry,
             States.SAVE_CONFIG: self.on_save_config_entry,
         }
-
-
 
     def exec(self):
         """
@@ -125,7 +127,6 @@ class CalibApp:
 
         self.change_state(States.VIEW_FINDER)
 
-
     def activate_frame_updates(self):
         if not self.keep_updating:
             self.keep_updating = True
@@ -148,10 +149,14 @@ class CalibApp:
         if self.keep_updating:
             self.root.after(self.delay, self.update_frame)
 
+    def on_close(self):
+        self.calib.close_camera()  # release the camera
+        self.root.destroy()  # actually close the window
 
 if __name__ == '__main__':
     app = CalibApp()
     app.exec()
-
+    time.sleep(1)
+    print("slept")
 
 

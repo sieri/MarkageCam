@@ -2,6 +2,7 @@ import tkinter
 
 import cv2 as cv
 from Capture.CameraDisplay import DebugDisplay, TkDisplay
+from platform import system
 
 
 class CamCalib:
@@ -30,7 +31,14 @@ class CamCalib:
         Activate the camera
         :return: success of activation
         """
-        self.camera = cv.VideoCapture(self.access)
+        if self.camera is not None and self.camera.isOpened():
+            self.close_camera()
+
+        if system() == "Windows":
+            # windows specific fix for a warning on opencv camera close
+            self.camera = cv.VideoCapture(self.access, cv.CAP_DSHOW)
+        else:
+            self.camera = cv.VideoCapture(self.access)
 
         return self.camera.isOpened()
 
@@ -54,6 +62,8 @@ class CamCalib:
 
     def close_camera(self):
         """close the camera"""
+        self.hide_camera()
+
         if self.camera is not None:
             self.hide_camera()
             self.camera.release()

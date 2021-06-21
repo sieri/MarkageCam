@@ -1,6 +1,7 @@
 # Access to the camera and optical correction
 import json
 import cv2 as cv
+from platform import system
 
 
 class Cam:
@@ -24,7 +25,11 @@ class Cam:
             if access.isdecimal():
                 access = int(access)
 
-        self.capture = cv.VideoCapture(access)
+        if system() == "Windows":
+            # windows specific fix for a warning on opencv camera close
+            self.capture = cv.VideoCapture(self.access, cv.CAP_DSHOW)
+        else:
+            self.capture = cv.VideoCapture(self.access)
 
     # get the image with camera correction
     def get_image(self):
