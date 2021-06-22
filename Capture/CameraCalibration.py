@@ -1,3 +1,4 @@
+import json
 import tkinter
 
 import cv2 as cv
@@ -89,5 +90,21 @@ class CamCalib:
         self.update_focus()
 
     def update_focus(self):
-        print(self.focus)
         self.camera.set(cv.CAP_PROP_FOCUS, self.focus)
+
+    def save(self, filename):
+
+        with open(filename, 'w') as fp:
+            try:
+                fp.write(
+                    json.dumps(
+                        {
+                            'cameraAccess': self.access,
+                            'focus': self.focus
+                        },
+                        indent=4
+                    )
+                )
+                return True
+            except IOError:
+                return False

@@ -2,6 +2,7 @@ import time
 
 from Capture.CameraCalibration import CamCalib
 import tkinter as tk
+from tkinter import messagebox, filedialog
 from enum import Enum, auto
 
 """
@@ -21,8 +22,8 @@ stateText = {
     States.INITIAL: "Please enter camera IP",
     States.ACTIVATE_CAMERA: "",
     States.VIEW_FINDER: "Please confirm it's the correct camera",
-    States.CAMERA_CONFIRMED: "Place gird in the camera field of view. Adjust the focus and confirm",
-    States.SAVE_CONFIG: ""
+    States.CAMERA_CONFIRMED: "Place the calibration gird in the camera field of view. Adjust the focus and confirm",
+    States.SAVE_CONFIG: "Saving, please wait"
 }
 
 
@@ -116,7 +117,7 @@ class CalibApp:
         run the application main loop till the end
         :return: None, only when exec finished
         """
-        self.change_state(States.INITIAL)
+        self.root.after(100, self.change_state, States.INITIAL)  # enter the state once gui is setup
         self.root.mainloop()
 
     def change_state(self, new_state):
@@ -133,6 +134,18 @@ class CalibApp:
         self.calib.close_camera()
         self.deactivate_frames_update()
 
+        self.cvn_camera_viewfinder.create_rectangle(
+            0, 0,
+            self.cvn_camera_viewfinder.winfo_width(),
+            self.cvn_camera_viewfinder.winfo_height(),
+            fill='gray'
+        )
+
+        # enable controls
+        self.lbl_camera_IP['state'] = tk.NORMAL
+        self.btn_camera_ip['state'] = tk.ACTIVE
+        self.ent_camera_ip['state'] = tk.NORMAL
+
         # disable controls
         self.ckb_camera_confirm['state'] = tk.DISABLED
         self.btn_focus_confirm['state'] = tk.DISABLED
@@ -144,6 +157,7 @@ class CalibApp:
 
         if not self.calib.activate_camera():
             self.change_state(States.INITIAL)
+            messagebox.showerror("Error", "couldn't open the camera")
         else:
             self.change_state(States.VIEW_FINDER)
 
@@ -180,7 +194,20 @@ class CalibApp:
         self.ent_camera_ip['state'] = tk.DISABLED
 
     def on_save_config_entry(self):
-        print("save")
+        filename = tk.filedialog.asksaveasfilename(
+            initialdir=".",
+            title="Save file",
+            initialfile="camConfig.json",
+            filetypes=(("Camera config file", "*.json"),)
+        )
+        if filename is None or len(filename) == 0:
+            self.change_state(States.CAMERA_CONFIRMED)
+        else:
+            if not self.calib.save(filename):
+                messagebox.showerror("Error", "couldn't save the file")
+                self.change_state(States.CAMERA_CONFIRMED)
+            self.change_state(States.INITIAL)
+
 
     def event_btn_confirm_ip(self):
         """
@@ -201,7 +228,6 @@ class CalibApp:
             self.event_btn_confirm_ip()
 
     def event_ckb_camera_confirm(self):
-        print(self.ckb_camera_confirm_value.get())
         if self.ckb_camera_confirm_value.get():
             self.change_state(States.CAMERA_CONFIRMED)
         else:
@@ -220,13 +246,12 @@ class CalibApp:
         self repeating method at each update of the camera
         :return: None
         """
-
-        self.frame = self.calib.get_frame()
-        if self.frame is not None:
-            self.cvn_camera_viewfinder.create_image(0, 0, image=self.frame, anchor=tk.NW)
-
         # check if continue
         if self.keep_updating:
+            self.frame = self.calib.get_frame()
+            if self.frame is not None:
+                self.cvn_camera_viewfinder.create_image(0, 0, image=self.frame, anchor=tk.NW)
+
             self.root.after(self.delay, self.update_frame)
 
     def on_close(self):
