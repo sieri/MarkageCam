@@ -14,7 +14,8 @@ class CamCalib:
         self.access = ""
         self.camera = None
         self.display = None
-        self.focus_increment = 1
+        self.focus = 0
+        self.focus_increment = 10
 
     def set_access(self, access: str):
         """
@@ -40,6 +41,10 @@ class CamCalib:
             self.camera = cv.VideoCapture(self.access, cv.CAP_DSHOW)
         else:
             self.camera = cv.VideoCapture(self.access)
+
+        # setup the focus
+        self.camera.set(cv.CAP_PROP_AUTOFOCUS, 0)
+        self.update_focus()
 
         return self.camera.isOpened()
 
@@ -76,7 +81,13 @@ class CamCalib:
         return self.display.lastFrame
 
     def focus_add(self):
-        pass
+        self.focus += self.focus_increment
+        self.update_focus()
 
     def focus_sub(self):
-        pass
+        self.focus -= self.focus_increment
+        self.update_focus()
+
+    def update_focus(self):
+        print(self.focus)
+        self.camera.set(cv.CAP_PROP_FOCUS, self.focus)

@@ -48,13 +48,15 @@ class CalibApp:
         self.ckb_camera_confirm_value = tk.BooleanVar()
 
         # create widgets
-        self.lbl_camera_IP = tk.Label(text="Enter camera address:")
-        self.ent_camera_ip = tk.Entry()
-        self.btn_camera_ip = tk.Button(text="Confirm", command=self.event_btn_confirm_ip)
-        self.cvn_camera_viewfinder = tk.Canvas()
-
         self.lbl_state_text = tk.Label()
 
+        self.ip_frame = tk.Frame(root)
+
+        self.lbl_camera_IP = tk.Label(self.ip_frame, text="Enter camera address:")
+        self.ent_camera_ip = tk.Entry(self.ip_frame)
+        self.btn_camera_ip = tk.Button(self.ip_frame, text="Confirm", command=self.event_btn_confirm_ip)
+
+        self.cvn_camera_viewfinder = tk.Canvas()
         self.ckb_camera_confirm = tk.Checkbutton(
             text='Correct camera',
             variable=self.ckb_camera_confirm_value,
@@ -62,34 +64,39 @@ class CalibApp:
             command=self.event_ckb_camera_confirm
         )
 
+        self.focus_frame = tk.Frame(root)
         self.btn_focus_add = tk.Button(
+            self.focus_frame,
             text='+',
             command=self.calib.focus_add
         )
 
         self.btn_focus_sub = tk.Button(
+            self.focus_frame,
             text='-',
             command=self.calib.focus_sub
         )
 
         self.btn_focus_confirm = tk.Button(
+            self.focus_frame,
             text='Confirm calibration',
             command=self.event_btn_confirm_focus
         )
 
         # place on the window
-        self.lbl_camera_IP.pack()
-        self.ent_camera_ip.pack()
-        self.btn_camera_ip.pack()
-        self.cvn_camera_viewfinder.pack()
-
-        self.ckb_camera_confirm.pack()
-
         self.lbl_state_text.pack()
 
-        self.btn_focus_add.pack()
-        self.btn_focus_sub.pack()
-        self.btn_focus_confirm.pack()
+        self.ip_frame.pack()
+        self.lbl_camera_IP.pack(side=tk.LEFT)
+        self.ent_camera_ip.pack(side=tk.LEFT)
+        self.btn_camera_ip.pack(side=tk.LEFT)
+        self.cvn_camera_viewfinder.pack()
+        self.ckb_camera_confirm.pack()
+
+        self.focus_frame.pack()
+        self.btn_focus_add.pack(side=tk.LEFT)
+        self.btn_focus_sub.pack(side=tk.LEFT)
+        self.btn_focus_confirm.pack(side=tk.LEFT)
 
         # bind functionalities extra functionalities
         self.ent_camera_ip.bind("<Return>", self.on_ent_camera_ip)
@@ -150,6 +157,8 @@ class CalibApp:
         self.activate_frame_updates()
 
         # activate controls
+
+        self.lbl_camera_IP['state'] = tk.NORMAL
         self.ckb_camera_confirm['state'] = tk.ACTIVE
         self.btn_camera_ip['state'] = tk.ACTIVE
         self.ent_camera_ip['state'] = tk.NORMAL
@@ -166,6 +175,7 @@ class CalibApp:
         self.btn_focus_sub['state'] = tk.ACTIVE
 
         # deactivate controls
+        self.lbl_camera_IP['state'] = tk.DISABLED
         self.btn_camera_ip['state'] = tk.DISABLED
         self.ent_camera_ip['state'] = tk.DISABLED
 
