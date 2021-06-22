@@ -27,9 +27,9 @@ class Cam:
 
         if system() == "Windows":
             # windows specific fix for a warning on opencv camera close
-            self.capture = cv.VideoCapture(self.access, cv.CAP_DSHOW)
+            self.capture = cv.VideoCapture(access, cv.CAP_DSHOW)
         else:
-            self.capture = cv.VideoCapture(self.access)
+            self.capture = cv.VideoCapture(access)
 
     # get the image with camera correction
     def get_image(self):

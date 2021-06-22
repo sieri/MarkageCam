@@ -11,6 +11,7 @@ Script to run the camera calibration app
 
 class States(Enum):
     INITIAL = auto()
+    ACTIVATE_CAMERA = auto()
     VIEW_FINDER = auto()
     CAMERA_CONFIRMED = auto()
     SAVE_CONFIG = auto()
@@ -18,6 +19,7 @@ class States(Enum):
 
 stateText = {
     States.INITIAL: "Please enter camera IP",
+    States.ACTIVATE_CAMERA: "",
     States.VIEW_FINDER: "Please confirm it's the correct camera",
     States.CAMERA_CONFIRMED: "Place gird in the camera field of view. Adjust the focus and confirm",
     States.SAVE_CONFIG: ""
@@ -68,6 +70,7 @@ class CalibApp:
         # create state machine
         self.transitions = {
             States.INITIAL: self.on_initial_entry,
+            States.ACTIVATE_CAMERA: self.on_activate_camera_entry,
             States.VIEW_FINDER: self.on_view_finder_entry,
             States.CAMERA_CONFIRMED: self.on_camera_confirmed_entry,
             States.SAVE_CONFIG: self.on_save_config_entry,
@@ -95,6 +98,14 @@ class CalibApp:
         self.calib.close_camera()
         self.deactivate_frames_update()
 
+    def on_activate_camera_entry(self):
+        self.calib.set_access(self.ent_camera_ip.get())
+
+        if not self.calib.activate_camera():
+            self.change_state(States.INITIAL)
+        else:
+            self.change_state(States.VIEW_FINDER)
+
     def on_view_finder_entry(self):
         self.calib.show_camera(
             (
@@ -120,13 +131,7 @@ class CalibApp:
         """
 
         print("attempting to open camera")
-        self.calib.set_access(self.ent_camera_ip.get())
-
-        if not self.calib.activate_camera():
-            self.change_state(States.INITIAL)
-            return
-
-        self.change_state(States.VIEW_FINDER)
+        self.change_state(States.ACTIVATE_CAMERA)
 
     def activate_frame_updates(self):
         if not self.keep_updating:

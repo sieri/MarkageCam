@@ -65,7 +65,6 @@ class CamCalib:
         self.hide_camera()
 
         if self.camera is not None:
-            self.hide_camera()
             self.camera.release()
 
     def get_frame(self) -> tkinter.PhotoImage:
