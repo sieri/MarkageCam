@@ -45,26 +45,54 @@ class CalibApp:
         self.state = None
         self.frame = None
         self.keep_updating = False
+        self.ckb_camera_confirm_value = tk.BooleanVar()
 
         # create widgets
         self.lbl_camera_IP = tk.Label(text="Enter camera address:")
         self.ent_camera_ip = tk.Entry()
-        self.btn_camera_ip = tk.Button(text="Confirm")
+        self.btn_camera_ip = tk.Button(text="Confirm", command=self.event_btn_confirm_ip)
         self.cvn_camera_viewfinder = tk.Canvas()
 
         self.lbl_state_text = tk.Label()
+
+        self.ckb_camera_confirm = tk.Checkbutton(
+            text='Correct camera',
+            variable=self.ckb_camera_confirm_value,
+            onvalue=True, offvalue=False,
+            command=self.event_ckb_camera_confirm
+        )
+
+        self.btn_focus_add = tk.Button(
+            text='+',
+            command=self.calib.focus_add
+        )
+
+        self.btn_focus_sub = tk.Button(
+            text='-',
+            command=self.calib.focus_sub
+        )
+
+        self.btn_focus_confirm = tk.Button(
+            text='Confirm calibration',
+            command=self.event_btn_confirm_focus
+        )
 
         # place on the window
         self.lbl_camera_IP.pack()
         self.ent_camera_ip.pack()
         self.btn_camera_ip.pack()
         self.cvn_camera_viewfinder.pack()
+
+        self.ckb_camera_confirm.pack()
+
         self.lbl_state_text.pack()
 
-        # bind functionalities
-        self.btn_camera_ip.bind("<Button-1>", self.event_btn_confirm_ip)
-        self.ent_camera_ip.bind("<Return>", self.event_btn_confirm_ip)
+        self.btn_focus_add.pack()
+        self.btn_focus_sub.pack()
+        self.btn_focus_confirm.pack()
 
+        # bind functionalities extra functionalities
+        self.ent_camera_ip.bind("<Return>", self.on_ent_camera_ip)
         self.root.protocol("WM_DELETE_WINDOW", self.on_close)
 
         # create state machine
@@ -98,6 +126,12 @@ class CalibApp:
         self.calib.close_camera()
         self.deactivate_frames_update()
 
+        # disable controls
+        self.ckb_camera_confirm['state'] = tk.DISABLED
+        self.btn_focus_confirm['state'] = tk.DISABLED
+        self.btn_focus_add['state'] = tk.DISABLED
+        self.btn_focus_sub['state'] = tk.DISABLED
+
     def on_activate_camera_entry(self):
         self.calib.set_access(self.ent_camera_ip.get())
 
@@ -115,23 +149,53 @@ class CalibApp:
         )
         self.activate_frame_updates()
 
+        # activate controls
+        self.ckb_camera_confirm['state'] = tk.ACTIVE
+        self.btn_camera_ip['state'] = tk.ACTIVE
+        self.ent_camera_ip['state'] = tk.NORMAL
+        
+        # deactivate controls
+        self.btn_focus_confirm['state'] = tk.DISABLED
+        self.btn_focus_add['state'] = tk.DISABLED
+        self.btn_focus_sub['state'] = tk.DISABLED
+
     def on_camera_confirmed_entry(self):
-        pass
+        # activate controls
+        self.btn_focus_confirm['state'] = tk.ACTIVE
+        self.btn_focus_add['state'] = tk.ACTIVE
+        self.btn_focus_sub['state'] = tk.ACTIVE
+
+        # deactivate controls
+        self.btn_camera_ip['state'] = tk.DISABLED
+        self.ent_camera_ip['state'] = tk.DISABLED
 
     def on_save_config_entry(self):
-        pass
+        print("save")
 
-    def event_btn_confirm_ip(self, event=None):
+    def event_btn_confirm_ip(self):
         """
         Event reacting to the confirmation of the camera address,
         connect to the camera
 
-        :param event:
         :return: None
         """
 
         print("attempting to open camera")
         self.change_state(States.ACTIVATE_CAMERA)
+
+    def event_btn_confirm_focus(self):
+        self.change_state(States.SAVE_CONFIG)
+
+    def on_ent_camera_ip(self, event=None):
+        if self.ent_camera_ip['state'] == tk.NORMAL:
+            self.event_btn_confirm_ip()
+
+    def event_ckb_camera_confirm(self):
+        print(self.ckb_camera_confirm_value.get())
+        if self.ckb_camera_confirm_value.get():
+            self.change_state(States.CAMERA_CONFIRMED)
+        else:
+            self.change_state(States.VIEW_FINDER)
 
     def activate_frame_updates(self):
         if not self.keep_updating:

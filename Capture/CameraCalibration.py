@@ -14,6 +14,7 @@ class CamCalib:
         self.access = ""
         self.camera = None
         self.display = None
+        self.focus_increment = 1
 
     def set_access(self, access: str):
         """
@@ -74,3 +75,8 @@ class CamCalib:
         """
         return self.display.lastFrame
 
+    def focus_add(self):
+        pass
+
+    def focus_sub(self):
+        pass
