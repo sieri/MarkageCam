@@ -87,17 +87,23 @@ class CamCalib:
     def calibrate(self):
         grabbed, img = self.camera.read()
 
+        grayscale = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
+
         if not grabbed:
             raise Exception("Camera not read")
 
-        foundPattern, corners = cv.findChessboardCorners(img, patternSize=(9, 6))
+        foundPattern, corners = cv.findChessboardCorners(grayscale, patternSize=(9, 6))
+
 
         if not foundPattern:
             raise Exception("Pattern not found")
 
-        cv.drawChessboardCorners(image=img, patternSize=(9, 6), corners=corners, patternWasFound=foundPattern)
+        term = (cv.TERM_CRITERIA_EPS + cv.TERM_CRITERIA_COUNT, 30, 0.1)
+        cv.cornerSubPix(grayscale, corners, (5, 5), (-1, -1), term)
 
+        cv.drawChessboardCorners(image=img, patternSize=(9, 6), corners=corners, patternWasFound=foundPattern)
         cv.imshow("test", img)
+
 
     def focus_add(self):
         self.focus += self.focus_increment
@@ -139,6 +145,6 @@ if __name__ == '__main__':
     while True:
         try:
             calib.calibrate()
-        except:
-            pass
+        except Exception  as e:
+            print(e)
         cv.waitKey(15)
