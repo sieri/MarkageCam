@@ -49,13 +49,16 @@ class CamCalib:
 
         return self.camera.isOpened()
 
-    def show_camera(self, scale):
+    def show_camera(self, scale = None):
         """
         Activate displaying the camera, run the captures
         :param scale: tupple of scale to resize image to
         :return: None
         """
-        self.display = TkDisplay(self.camera, scale)
+        if scale is None:
+            self.display = DebugDisplay("Calibration Camera", self.camera)
+        else:
+            self.display = TkDisplay(self.camera, scale)
         self.display.start()
 
     def hide_camera(self):
@@ -80,6 +83,21 @@ class CamCalib:
         :return: the last frame captured
         """
         return self.display.lastFrame
+
+    def calibrate(self):
+        grabbed, img = self.camera.read()
+
+        if not grabbed:
+            raise Exception("Camera not read")
+
+        foundPattern, corners = cv.findChessboardCorners(img, patternSize=(9, 6))
+
+        if not foundPattern:
+            raise Exception("Pattern not found")
+
+        cv.drawChessboardCorners(image=img, patternSize=(9, 6), corners=corners, patternWasFound=foundPattern)
+
+        cv.imshow("test", img)
 
     def focus_add(self):
         self.focus += self.focus_increment
@@ -108,3 +126,19 @@ class CamCalib:
                 return True
             except IOError:
                 return False
+
+
+# temp test code
+if __name__ == '__main__':
+    calib = CamCalib()
+    calib.set_access('0')
+    calib.activate_camera()
+    calib.show_camera()
+    print("test plan")
+
+    while True:
+        try:
+            calib.calibrate()
+        except:
+            pass
+        cv.waitKey(15)
