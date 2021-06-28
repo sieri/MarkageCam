@@ -2,8 +2,11 @@ import json
 import tkinter
 
 import cv2 as cv
+import numpy as np
+
 from Capture.CameraDisplay import DebugDisplay, TkDisplay
 from platform import system
+from environement import debug
 
 
 class CamCalib:
@@ -49,7 +52,7 @@ class CamCalib:
 
         return self.camera.isOpened()
 
-    def show_camera(self, scale = None):
+    def show_camera(self, scale=None):
         """
         Activate displaying the camera, run the captures
         :param scale: tupple of scale to resize image to
@@ -85,24 +88,56 @@ class CamCalib:
         return self.display.lastFrame
 
     def calibrate(self):
-        grabbed, img = self.camera.read()
+        obj_points = []  # 3d points in real world space
+        img_points = []  # 2d points in image plane.
 
+        size = (9, 6)  # size of the pattern
+
+        # prepare object points, like (0,0,0), (1,0,0), (2,0,0) ....,(sizeX-1,sizeY-1,0)
+        objp = np.zeros((size[0] * size[1], 3), np.float32)
+        objp[:, :2] = np.mgrid[0:size[0], 0:size[1]].T.reshape(-1, 2)
+
+        # grab a frame
+        grabbed, img = self.camera.read()
+        # cv.imwrite("CameraCalibSetup.png", img)
         grayscale = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
 
         if not grabbed:
             raise Exception("Camera not read")
 
-        foundPattern, corners = cv.findChessboardCorners(grayscale, patternSize=(9, 6))
+        found_pattern, corners = cv.findChessboardCorners(grayscale, patternSize=(9, 6))
 
-
-        if not foundPattern:
+        if not found_pattern:
             raise Exception("Pattern not found")
 
         term = (cv.TERM_CRITERIA_EPS + cv.TERM_CRITERIA_COUNT, 30, 0.1)
+
+        # improve accuracy of the corner detection
         cv.cornerSubPix(grayscale, corners, (5, 5), (-1, -1), term)
 
-        cv.drawChessboardCorners(image=img, patternSize=(9, 6), corners=corners, patternWasFound=foundPattern)
-        cv.imshow("test", img)
+        # add the points
+        obj_points.append(objp)  # the base array to mark the position
+        img_points.append(corners)  # and the corners that correspond to them
+
+        # the points could be repeated a couple of time for better accuracy
+
+        if debug:
+            cv.drawChessboardCorners(image=img, patternSize=size, corners=corners, patternWasFound=found_pattern)
+            cv.imshow("test", img)
+
+        h, w = grayscale.shape[:2] # get the image resolution
+
+        # calculate camera distortion
+        rms, camera_matrix, dist_coefs, rvecs, tvecs = cv.calibrateCamera(obj_points, img_points, (w, h), None, None)
+
+        if debug:
+            print("\nRMS:", rms)
+            print("camera matrix:\n", camera_matrix)
+            print("distortion coefficients: ", dist_coefs.ravel())
+
+        # cv.imwrite("CameraCalibExample.png", img) #TODO: remove report code
+
+        return rms, camera_matrix, dist_coefs, rvecs, tvecs
 
 
     def focus_add(self):
@@ -137,14 +172,27 @@ class CamCalib:
 # temp test code
 if __name__ == '__main__':
     calib = CamCalib()
-    calib.set_access('0')
+    calib.set_access('1')
     calib.activate_camera()
     calib.show_camera()
     print("test plan")
 
     while True:
         try:
-            calib.calibrate()
-        except Exception  as e:
+            rms, camera_matrix, dist_coefs, rvecs, tvecs = calib.calibrate()
+
+            grabbed, img = calib.camera.read()
+
+            h, w = img.shape[:2]
+            newcameramtx, roi = cv.getOptimalNewCameraMatrix(camera_matrix, dist_coefs, (w, h), 1, (w, h))
+
+            dst = cv.undistort(img, camera_matrix, dist_coefs, None, newcameramtx)
+
+            # crop and save the image
+            x, y, w, h = roi
+            dst = dst[y:y + h, x:x + w]
+
+            cv.imshow("undistorted", dst)
+        except Exception as e:
             print(e)
         cv.waitKey(15)
