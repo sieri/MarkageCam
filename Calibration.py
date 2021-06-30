@@ -1,5 +1,5 @@
 import time
-
+from GUI.Base import CameraApp
 from Capture.CameraCalibration import CamCalib
 import tkinter as tk
 from tkinter import messagebox, filedialog
@@ -27,22 +27,19 @@ stateText = {
 }
 
 
-class CalibApp:
+class CalibApp(CameraApp):
     """Camera calibration window"""
 
-    def __init__(self, root=tk.Tk(), title="Calibration Window", delay=15):
+    def __init__(self, root, title="Calibration Window", delay=15):
         """
         constructor
         :param root: Root TK frame we display into
         :param title: title the root frame
         :param delay: delay between the updates of new frame displayed
         """
-        self.root = root
-        self.title = title
-        self.delay = delay
+        super().__init__(root, title, delay)
 
-        self.root.title = self.title
-        self.calib = CamCalib()
+        self.cam = CamCalib()
         self.state = None
         self.frame = None
         self.keep_updating = False
@@ -69,13 +66,13 @@ class CalibApp:
         self.btn_focus_add = tk.Button(
             self.focus_frame,
             text='+',
-            command=self.calib.focus_add
+            command=self.cam.focus_add
         )
 
         self.btn_focus_sub = tk.Button(
             self.focus_frame,
             text='-',
-            command=self.calib.focus_sub
+            command=self.cam.focus_sub
         )
 
         self.btn_focus_confirm = tk.Button(
@@ -101,7 +98,6 @@ class CalibApp:
 
         # bind functionalities extra functionalities
         self.ent_camera_ip.bind("<Return>", self.on_ent_camera_ip)
-        self.root.protocol("WM_DELETE_WINDOW", self.on_close)
 
         # create state machine
         self.transitions = {
@@ -131,7 +127,7 @@ class CalibApp:
             self.transitions[self.state]()
 
     def on_initial_entry(self):
-        self.calib.close_camera()
+        self.cam.close_camera()
         self.deactivate_frames_update()
 
         self.cvn_camera_viewfinder.create_rectangle(
@@ -153,16 +149,16 @@ class CalibApp:
         self.btn_focus_sub['state'] = tk.DISABLED
 
     def on_activate_camera_entry(self):
-        self.calib.set_access(self.ent_camera_ip.get())
+        self.cam.set_access(self.ent_camera_ip.get())
 
-        if not self.calib.activate_camera():
+        if not self.cam.activate_camera():
             self.change_state(States.INITIAL)
             messagebox.showerror("Error", "couldn't open the camera")
         else:
             self.change_state(States.VIEW_FINDER)
 
     def on_view_finder_entry(self):
-        self.calib.show_camera(
+        self.cam.show_camera(
             (
                 self.cvn_camera_viewfinder.winfo_width(),
                 self.cvn_camera_viewfinder.winfo_height()
@@ -203,7 +199,7 @@ class CalibApp:
         if filename is None or len(filename) == 0:
             self.change_state(States.CAMERA_CONFIRMED)
         else:
-            if not self.calib.save(filename):
+            if not self.cam.save(filename):
                 messagebox.showerror("Error", "couldn't save the file")
                 self.change_state(States.CAMERA_CONFIRMED)
             self.change_state(States.INITIAL)
@@ -233,33 +229,10 @@ class CalibApp:
         else:
             self.change_state(States.VIEW_FINDER)
 
-    def activate_frame_updates(self):
-        if not self.keep_updating:
-            self.keep_updating = True
-            self.update_frame()
 
-    def deactivate_frames_update(self):
-        self.keep_updating = False
 
-    def update_frame(self):
-        """
-        self repeating method at each update of the camera
-        :return: None
-        """
-        # check if continue
-        if self.keep_updating:
-            self.frame = self.calib.get_frame()
-            if self.frame is not None:
-                self.cvn_camera_viewfinder.create_image(0, 0, image=self.frame, anchor=tk.NW)
-
-            self.root.after(self.delay, self.update_frame)
-
-    def on_close(self):
-        self.keep_updating = False
-        self.calib.close_camera()  # release the camera
-        self.root.after(10, self.root.destroy)  # close the window, delays to give time to the threads to finish
 
 
 if __name__ == '__main__':
-    app = CalibApp()
+    app = CalibApp(tk.Tk())
     app.exec()

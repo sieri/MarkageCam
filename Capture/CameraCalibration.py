@@ -1,15 +1,15 @@
 import json
-import tkinter
+
 
 import cv2 as cv
 import numpy as np
 
-from Capture.CameraDisplay import DebugDisplay, TkDisplay
+from Capture.CameraBase import CameraBase
 from platform import system
 from environement import debug
 
 
-class CamCalib:
+class CamCalib(CameraBase):
     """
     A basic camera access used as a viewfinder for the calibration
     """
@@ -52,41 +52,6 @@ class CamCalib:
 
         return self.camera.isOpened()
 
-    def show_camera(self, scale=None):
-        """
-        Activate displaying the camera, run the captures
-        :param scale: tupple of scale to resize image to
-        :return: None
-        """
-        if scale is None:
-            self.display = DebugDisplay("Calibration Camera", self.camera)
-        else:
-            self.display = TkDisplay(self.camera, scale)
-        self.display.start()
-
-    def hide_camera(self):
-        """
-        disable the updates of the camera image, no capture run
-        camera still opened
-        :return: None
-        """
-        if self.display is not None:
-            self.display.stop()
-
-    def close_camera(self):
-        """close the camera"""
-        self.hide_camera()
-
-        if self.camera is not None:
-            self.camera.release()
-
-    def get_frame(self) -> tkinter.PhotoImage:
-        """
-        get the las frame
-        :return: the last frame captured
-        """
-        return self.display.lastFrame
-
     def calibrate_fish_eye_distortion(self, repeats=1, size=(9, 6)):
         """
         WARNING : NON FUNCTIONAL STUB, DO NOT USE BEFORE FIXING
@@ -103,9 +68,13 @@ class CamCalib:
         img_points = []
         obj_points = []
         for dummy in range(repeats):
-            i, o = self.process_chessboard(size=size)
-            img_points.extend(i)
-            obj_points.extend(o)
+            try:
+                i, o = self.process_chessboard(size=size)
+                img_points.extend(i)
+                obj_points.extend(o)
+            except Exception as e:
+                dummy -= 1
+                print(e)
 
         w = int(self.camera.get(cv.CAP_PROP_FRAME_WIDTH))
         h = int(self.camera.get(cv.CAP_PROP_FRAME_HEIGHT))
@@ -196,6 +165,7 @@ class CamCalib:
                 return True
             except IOError:
                 return False
+
 
 # temp test code
 if __name__ == '__main__':
