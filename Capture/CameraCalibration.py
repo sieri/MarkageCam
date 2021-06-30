@@ -87,45 +87,28 @@ class CamCalib:
         """
         return self.display.lastFrame
 
-    def calibrate(self):
-        obj_points = []  # 3d points in real world space
-        img_points = []  # 2d points in image plane.
+    def calibrate_fish_eye_distortion(self, repeats=1, size=(9, 6)):
+        """
+        WARNING : NON FUNCTIONAL STUB, DO NOT USE BEFORE FIXING
 
-        size = (9, 6)  # size of the pattern
+        Gets the camera distortion parameter from a matrix to be used to correct
+        the distortion
 
-        # prepare object points, like (0,0,0), (1,0,0), (2,0,0) ....,(sizeX-1,sizeY-1,0)
-        objp = np.zeros((size[0] * size[1], 3), np.float32)
-        objp[:, :2] = np.mgrid[0:size[0], 0:size[1]].T.reshape(-1, 2)
+        reference : https://docs.opencv.org/master/dc/dbb/tutorial_py_calibration.html
 
-        # grab a frame
-        grabbed, img = self.camera.read()
-        # cv.imwrite("CameraCalibSetup.png", img)
-        grayscale = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
+        :param repeats: number of image used for the calibration
+        :param size: size of the gird pattern used
+        :return:
+        """
+        img_points = []
+        obj_points = []
+        for dummy in range(repeats):
+            i, o = self.process_chessboard(size=size)
+            img_points.extend(i)
+            obj_points.extend(o)
 
-        if not grabbed:
-            raise Exception("Camera not read")
-
-        found_pattern, corners = cv.findChessboardCorners(grayscale, patternSize=(9, 6))
-
-        if not found_pattern:
-            raise Exception("Pattern not found")
-
-        term = (cv.TERM_CRITERIA_EPS + cv.TERM_CRITERIA_COUNT, 30, 0.1)
-
-        # improve accuracy of the corner detection
-        cv.cornerSubPix(grayscale, corners, (5, 5), (-1, -1), term)
-
-        # add the points
-        obj_points.append(objp)  # the base array to mark the position
-        img_points.append(corners)  # and the corners that correspond to them
-
-        # the points could be repeated a couple of time for better accuracy
-
-        if debug:
-            cv.drawChessboardCorners(image=img, patternSize=size, corners=corners, patternWasFound=found_pattern)
-            cv.imshow("test", img)
-
-        h, w = grayscale.shape[:2] # get the image resolution
+        w = int(self.camera.get(cv.CAP_PROP_FRAME_WIDTH))
+        h = int(self.camera.get(cv.CAP_PROP_FRAME_HEIGHT))
 
         # calculate camera distortion
         rms, camera_matrix, dist_coefs, rvecs, tvecs = cv.calibrateCamera(obj_points, img_points, (w, h), None, None)
@@ -139,6 +122,52 @@ class CamCalib:
 
         return rms, camera_matrix, dist_coefs, rvecs, tvecs
 
+    def process_chessboard(self, size=(9, 6)):
+        """
+        Get the points of the chessboad grid for calibration purposes
+
+        :raises: Exception in case of error reading the camera or pattern
+
+        :param size: size of the gird pattern used
+        :return: lists of object and images point see https://docs.opencv.org/master/dc/dbb/tutorial_py_calibration.html
+        """
+
+        obj_points = []  # 3d points in real world space
+        img_points = []  # 2d points in image plane.
+
+        # size of the pattern
+        # prepare object points, like (0,0,0), (1,0,0), (2,0,0) ....,(sizeX-1,sizeY-1,0)
+        objp = np.zeros((size[0] * size[1], 3), np.float32)
+        objp[:, :2] = np.mgrid[0:size[0], 0:size[1]].T.reshape(-1, 2)
+
+        # grab a frame
+        cv.waitKey(25)
+        grabbed, img = self.camera.read()
+
+        # cv.imwrite("CameraCalibSetup.png", img)
+        grayscale = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
+
+        if not grabbed:
+            raise Exception("Camera not read")
+        found_pattern, corners = cv.findChessboardCorners(grayscale, patternSize=(9, 6))
+        if not found_pattern:
+            raise Exception("Pattern not found")
+
+        term = (cv.TERM_CRITERIA_EPS + cv.TERM_CRITERIA_COUNT, 30, 0.1)
+
+        # improve accuracy of the corner detection
+        cv.cornerSubPix(grayscale, corners, (5, 5), (-1, -1), term)
+
+        # add the points
+        obj_points.append(objp)  # the base array to mark the position
+        img_points.append(corners)  # and the corners that correspond to them
+
+        # the points could be repeated a couple of time for better accuracy
+        if debug:
+            cv.drawChessboardCorners(image=img, patternSize=size, corners=corners, patternWasFound=found_pattern)
+            cv.imshow("test", img)
+
+        return img_points, obj_points
 
     def focus_add(self):
         self.focus += self.focus_increment
@@ -168,31 +197,25 @@ class CamCalib:
             except IOError:
                 return False
 
-
 # temp test code
 if __name__ == '__main__':
     calib = CamCalib()
     calib.set_access('1')
     calib.activate_camera()
     calib.show_camera()
-    print("test plan")
 
-    while True:
-        try:
-            rms, camera_matrix, dist_coefs, rvecs, tvecs = calib.calibrate()
+    rms, camera_matrix, dist_coefs, rvecs, tvecs = calib.calibrate_fish_eye_distortion(repeats=10)
 
-            grabbed, img = calib.camera.read()
+    grabbed, img = calib.camera.read()
 
-            h, w = img.shape[:2]
-            newcameramtx, roi = cv.getOptimalNewCameraMatrix(camera_matrix, dist_coefs, (w, h), 1, (w, h))
+    h, w = img.shape[:2]
+    newcameramtx, roi = cv.getOptimalNewCameraMatrix(camera_matrix, dist_coefs, (w, h), 1, (w, h))
 
-            dst = cv.undistort(img, camera_matrix, dist_coefs, None, newcameramtx)
+    dst = cv.undistort(img, camera_matrix, dist_coefs, None, newcameramtx)
 
-            # crop and save the image
-            x, y, w, h = roi
-            dst = dst[y:y + h, x:x + w]
+    # crop and save the image
+    x, y, w, h = roi
+    dst = dst[y:y + h, x:x + w]
 
-            cv.imshow("undistorted", dst)
-        except Exception as e:
-            print(e)
-        cv.waitKey(15)
+    cv.imshow("undistorted", dst)
+    cv.waitKey(0)
