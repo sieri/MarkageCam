@@ -4,7 +4,8 @@ import unittest
 from Capture.Camera import Cam
 import cv2 as cv
 
-class CameraTestCase_WebCam(unittest.TestCase):
+
+class CameraTestCaseWebCam(unittest.TestCase):
 
     def setUp(self) -> None:
         f = open("testConf.json", 'w')
@@ -21,13 +22,13 @@ class CameraTestCase_WebCam(unittest.TestCase):
 
     def test_cam_capture(self):
         c = Cam('testConf.json')
-        c.activate()
+        c.activate_camera()
         img = c.get_image()
         self.assertIsNotNone(img)
         cv.imshow("Test Capture", img)
         cv.waitKey(1000)
         cv.destroyAllWindows()
-        c.deactivate()
+        c.close_camera()
 
 
 if __name__ == '__main__':

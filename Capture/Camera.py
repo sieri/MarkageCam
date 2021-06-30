@@ -2,22 +2,24 @@
 import json
 import cv2 as cv
 from platform import system
+from Capture.CameraBase import CameraBase
 
 
-class Cam:
-
+class Cam(CameraBase):
     def __init__(self, config_file):
-        self.capture = None
-
-        with open(config_file) as fp:
-            try:
+        super().__init__()
+        try:
+            with open(config_file) as fp:
                 self.config = json.load(fp)
 
-            except IOError:
-                print("Unable to load camera config file. Run Calibration")
+        except (IOError, FileNotFoundError):
+            print("Unable to load camera config file. Run Calibration")
+            self.config = None
 
-    # activate the camera
-    def activate(self):
+    def activate_camera(self):
+        if self.config is None:
+            return False
+
         access = self.config['cameraAccess']
 
         # cast if needed, in the case of a webcam
@@ -27,18 +29,20 @@ class Cam:
 
         if system() == "Windows":
             # windows specific fix for a warning on opencv camera close
-            self.capture = cv.VideoCapture(access, cv.CAP_DSHOW)
+            self.camera = cv.VideoCapture(access, cv.CAP_DSHOW)
         else:
-            self.capture = cv.VideoCapture(access)
+            self.camera = cv.VideoCapture(access)
 
-    # get the image with camera correction
+        return self.camera.isOpened()
+
+
     def get_image(self):
-        retval, img = self.capture.read()
+        """get the image with camera correction"""
+        retval, img = self.camera.read()
 
         if retval and img is not None:
             return img
         else:
             pass  # todo: decide what to do in case of capture fail
 
-    def deactivate(self):
-        self.capture.release()
+
