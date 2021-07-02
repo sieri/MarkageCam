@@ -230,9 +230,6 @@ class CalibApp(CameraApp):
             self.change_state(States.VIEW_FINDER)
 
 
-
-
-
 if __name__ == '__main__':
     app = CalibApp(tk.Tk())
     app.exec()
