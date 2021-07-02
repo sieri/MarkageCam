@@ -1,5 +1,7 @@
+import os
 from datetime import datetime, timezone
-
+from environement import image_path
+import cv2 as cv
 
 class DataBase:
     def __init__(self, _id=None, tableName = "INVALID"):
@@ -43,10 +45,15 @@ class BaseImg(DataBase):
 
         self.image_path = None
 
+    def save(self):
+        self.image_path = image_path + "base_" + self.time.strftime('%Y-%m-%d_%H-%M-%S') + ".png"
+
+        cv.imwrite(self.image_path, self.img)
+
     def get_element(self):
         return (
             ("_id", "expected_text", "img_path", "time"),
-            (self.id, self.expected_text.id, self.image_path, self.time.replace(tzinfo=timezone.utc).timestamp())
+            (self.id, self.expected_text.id, self.image_path, int(self.time.replace(tzinfo=timezone.utc).timestamp()))
         )
 
 
@@ -57,6 +64,10 @@ class CorrectedImg(DataBase):
         self.img = img
 
         self.image_path = None
+
+    def save(self):
+        self.image_path = image_path + "corrected_" + self.base_img.time.strftime('%Y-%m-%d_%H-%M-%S') + ".png"
+        cv.imwrite(self.image_path, self.img)
 
     def get_element(self):
         return (

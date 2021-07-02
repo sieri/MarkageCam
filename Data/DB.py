@@ -3,6 +3,8 @@ import sqlite3
 
 from Data.DataClasses import *
 
+from datetime import datetime
+
 tables_names = ["EXPECTED_TEXT", "BASE_IMG", "CORRECTED_IMG"]
 
 tables_schemas = {
@@ -56,6 +58,7 @@ class DbConnector:
             self.db.close()
 
     def insert(self, data: DataBase):
+        cur = self.db.cursor()
         data.save()
         element_list = data.get_element()
 
@@ -72,9 +75,13 @@ class DbConnector:
             ",".join(text),
             ("?," * len(text))[:-1]
         )
+        try:
+            cur.execute(sql, val)
+            self.db.commit()
+            data.id = cur.lastrowid
+        except sqlite3.Error as e:
+            print(e)
 
-        self.db.execute(sql, val)
-        self.db.commit()
 
     def has_tables(self):
         cur = self.db.cursor()
@@ -102,5 +109,20 @@ if __name__ == '__main__':
         i.insert(test2)
         i.insert(test)
 
+        from Capture import Camera
+        from cv2 import waitKey
+
+        cam = Camera.Cam("../camConfig.json")
+        cam.activate_camera()
+        cam.show_camera()
+        waitKey(199)
+        img = BaseImg(img=cam.get_image(), time=datetime.now(), expected_text=test)
+        i.insert(img)
         cur.execute('select * FROM EXPECTED_TEXT;')
         print(cur.fetchall())
+
+        print("\n img")
+        cur.execute('select * FROM BASE_IMG;')
+        print(cur.fetchall())
+
+        cam.close_camera()
