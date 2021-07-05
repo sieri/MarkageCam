@@ -1,10 +1,12 @@
 import os.path
+from datetime import datetime
 
 from Capture.Camera import Cam
 from GUI.Base import CameraApp
 import tkinter as tk
 from enum import Enum, auto
 from tkinter import messagebox, filedialog
+from Data import DB
 
 
 class States(Enum):
@@ -23,12 +25,43 @@ class CaptureApp(CameraApp):
         :param delay: delay between the updates of new frame displayed
         """
         super().__init__(root, title, delay)
+        self.expected_text = None
+        self.config_filename = "./camConfig.json"
 
+
+        # gui
         self.cvn_camera_viewfinder = tk.Canvas()
         self.cvn_camera_viewfinder.pack()
 
-        self.config_filename = "./camConfig.json"
+        self.meta_frame = tk.Frame(root)
+        self.expected_frame = tk.Frame(self.meta_frame)
+        self.repeats_frame = tk.Frame(self.meta_frame)
+        self.lbl_expected_text = tk.Label(self.expected_frame, text="text")
+        self.ent_expected_text = tk.Entry(self.expected_frame)
+        self.lbl_x_repeats = tk.Label(self.repeats_frame, text="x")
+        self.ent_x_repeats = tk.Entry(self.repeats_frame)
+        self.lbl_y_repeats = tk.Label(self.repeats_frame, text="y")
+        self.ent_y_repeats = tk.Entry(self.repeats_frame)
+        self.btn_confirm_expected = tk.Button(text="Confirm", command=self.on_new_text)
 
+        self.meta_frame.pack()
+        self.expected_frame.pack()
+        self.repeats_frame.pack()
+        self.lbl_expected_text.pack(side=tk.LEFT)
+        self.ent_expected_text.pack(side=tk.LEFT)
+        self.lbl_x_repeats.pack(side=tk.LEFT)
+        self.ent_x_repeats.pack(side=tk.LEFT)
+        self.lbl_y_repeats.pack(side=tk.LEFT)
+        self.ent_y_repeats.pack(side=tk.LEFT)
+        self.btn_confirm_expected.pack()
+
+        self.ent_expected_text.insert(0, "Default expected text")
+        self.ent_x_repeats.insert(0, "0")
+        self.ent_y_repeats.insert(0, "0")
+
+        self.root.bind('c', self.capture_image)
+
+        # state machine
         self.state = None
         self.transitions = {
             States.INITIAL: self.on_entry_initial,
@@ -36,6 +69,8 @@ class CaptureApp(CameraApp):
             States.CAMERA_ACTIVATION: self.on_entry_camera_activation,
             States.CAMERA_OPEN: self.on_entry_camera_open,
         }
+
+
 
     def exec(self):
         """
@@ -81,7 +116,6 @@ class CaptureApp(CameraApp):
         else:
             self.change_state(States.ENTER_FILE)
 
-
     def on_entry_camera_open(self):
         self.cam.show_camera(
             (
@@ -91,6 +125,21 @@ class CaptureApp(CameraApp):
         )
 
         self.activate_frame_updates()
+
+    def on_new_text(self):
+        text = self.ent_expected_text.get()
+        x = int(self.ent_x_repeats.get())
+        y = int(self.ent_y_repeats.get())
+
+        self.expected_text = DB.ExpectedText(text, x, y)
+        with DB.DbConnector() as db:
+            db.insert(self.expected_text)
+
+    def capture_image(self, _event=None):
+        img = self.cam.get_image()
+        newImage = DB.BaseImg(img, datetime.now(), self.expected_text)
+        with DB.DbConnector() as db:
+            db.insert(newImage)
 
 if __name__ == '__main__':
     app = CaptureApp(tk.Tk())

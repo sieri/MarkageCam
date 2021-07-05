@@ -234,6 +234,9 @@ class BaseImg(DataBase):
         return BaseImg(img, time, expected_text, id)
 
     def save(self):
+        if not os.path.isdir(image_path):
+            os.mkdir(image_path)
+
         self.image_path = image_path + "base_" + self.time.strftime('%Y-%m-%d_%H-%M-%S') + ".png"
 
         cv.imwrite(self.image_path, self.img)
@@ -281,6 +284,9 @@ class CorrectedImg(DataBase):
         return BaseImg(img, base_img, id)
 
     def save(self):
+        if not os.path.isdir(image_path):
+            os.mkdir(image_path)
+
         self.image_path = image_path + "corrected_" + self.base_img.time.strftime('%Y-%m-%d_%H-%M-%S') + ".png"
         cv.imwrite(self.image_path, self.img)
 
