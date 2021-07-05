@@ -43,6 +43,7 @@ class DbConnector:
         self.media_root = mr
 
         self.db = None
+        self.filters = []
 
     def __enter__(self):
         try:
@@ -82,6 +83,33 @@ class DbConnector:
         except sqlite3.Error as e:
             print(e)
 
+    @staticmethod
+    def filter_id(id_filter):
+        if id_filter is int:
+            return "_id = filter"
+
+    def read(self, data_type, clearFilter=False):
+        cur = self.db.cursor()
+
+        filters = ""
+
+        sql = '''SELECT * FROM %s %s;''' % data_type.tableName, filters
+        cur.execute(sql)
+        data = cur.fetchall()
+
+        strippped_indexes = [x[0] for x in cur.description]
+        values_list = []
+        for e in data:
+            parameters = dict()
+            for i in range(len(e)):
+                parameters[strippped_indexes[i]] = e[i]
+            new_element = data_type.read(parameters)
+            values_list.append(new_element)
+
+        if clearFilter:
+            self.filters.clear()
+
+        return values_list
 
     def has_tables(self):
         cur = self.db.cursor()
@@ -118,11 +146,10 @@ if __name__ == '__main__':
         waitKey(199)
         img = BaseImg(img=cam.get_image(), time=datetime.now(), expected_text=test)
         i.insert(img)
-        cur.execute('select * FROM EXPECTED_TEXT;')
-        print(cur.fetchall())
+        text = i.read(ExpectedText)
 
         print("\n img")
         cur.execute('select * FROM BASE_IMG;')
-        print(cur.fetchall())
+        img_read = i.read(BaseImg)
 
         cam.close_camera()

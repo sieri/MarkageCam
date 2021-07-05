@@ -111,7 +111,7 @@ class CamCalib(CameraBase):
 
         # grab a frame
         cv.waitKey(25)
-        grabbed, img = self.camera.read()
+        grabbed, img = self.camera.read(,
 
         # cv.imwrite("CameraCalibSetup.png", img)
         grayscale = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
@@ -176,7 +176,7 @@ if __name__ == '__main__':
 
     rms, camera_matrix, dist_coefs, rvecs, tvecs = calib.calibrate_fish_eye_distortion(repeats=10)
 
-    grabbed, img = calib.camera.read()
+    grabbed, img = calib.camera.read(,
 
     h, w = img.shape[:2]
     newcameramtx, roi = cv.getOptimalNewCameraMatrix(camera_matrix, dist_coefs, (w, h), 1, (w, h))
