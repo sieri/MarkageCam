@@ -42,7 +42,7 @@ tables_schemas = {
 
 _currently_open = None
 
-class DataBase:
+class Data:
     tableName = "INVALID"
 
     def __init__(self, id=None):
@@ -89,7 +89,7 @@ class DbConnector:
         if self.db is not None:
             self.db.close()
 
-    def insert(self, data: DataBase):
+    def insert(self, data: Data):
         cur = self.db.cursor()
         data.save()
         element_list = data.get_element()
@@ -172,7 +172,7 @@ class DbConnector:
 
 
 
-class ExpectedText(DataBase):
+class ExpectedText(Data):
     tableName = "EXPECTED_TEXT"
 
     def __init__(self, text, x_repeats, y_repeats, id=None, ):
@@ -197,7 +197,7 @@ class ExpectedText(DataBase):
         )
 
 
-class BaseImg(DataBase):
+class BaseImg(Data):
     time: datetime
     expected_text: ExpectedText
     image_path: str
@@ -248,11 +248,7 @@ class BaseImg(DataBase):
         )
 
 
-
-
-
-
-class CorrectedImg(DataBase):
+class CorrectedImg(Data):
     tableName = "CORRECTED_IMG"
 
     def __init__(self, img, base_img, id=None):
