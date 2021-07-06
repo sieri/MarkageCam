@@ -2,6 +2,7 @@ import os.path
 from datetime import datetime
 
 from Capture.Camera import Cam
+from Capture.Network import TCP_server
 from GUI.Base import CameraApp
 import tkinter as tk
 from enum import Enum, auto
@@ -70,6 +71,8 @@ class CaptureApp(CameraApp):
             States.CAMERA_OPEN: self.on_entry_camera_open,
         }
 
+        self.network = TCP_server(self.capture_image)
+
 
 
     def exec(self):
@@ -93,6 +96,8 @@ class CaptureApp(CameraApp):
             self.cvn_camera_viewfinder.winfo_height(),
             fill='gray'
         )
+
+        self.network.start()
 
         if os.path.exists(self.config_filename):
             self.change_state(States.CAMERA_ACTIVATION)
@@ -140,6 +145,10 @@ class CaptureApp(CameraApp):
         newImage = DB.BaseImg(img, datetime.now(), self.expected_text)
         with DB.DbConnector() as db:
             db.insert(newImage)
+
+    def on_close(self):
+        self.network.stop()
+        super().on_close()
 
 if __name__ == '__main__':
     app = CaptureApp(tk.Tk())
