@@ -1,6 +1,6 @@
 import json
 
-
+import cv2
 import cv2 as cv
 import numpy as np
 
@@ -8,6 +8,10 @@ from Capture.CameraBase import CameraBase
 from platform import system
 from environement import debug
 
+if debug:
+    from Utils.DebugDisplay import *
+
+local_debug = True
 
 class CamCalib(CameraBase):
     """
@@ -87,7 +91,7 @@ class CamCalib(CameraBase):
             print("camera matrix:\n", camera_matrix)
             print("distortion coefficients: ", dist_coefs.ravel())
 
-        # cv.imwrite("CameraCalibExample.png", img) #TODO: remove report code
+
 
         return rms, camera_matrix, dist_coefs, rvecs, tvecs
 
@@ -111,9 +115,9 @@ class CamCalib(CameraBase):
 
         # grab a frame
         cv.waitKey(25)
-        grabbed, img = self.camera.read(,
+        grabbed, img = self.camera.read()
 
-        # cv.imwrite("CameraCalibSetup.png", img)
+        # cv.imwrite("CameraCalibSetup.png", img) # TODO: remove report code
         grayscale = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
 
         if not grabbed:
@@ -136,7 +140,63 @@ class CamCalib(CameraBase):
             cv.drawChessboardCorners(image=img, patternSize=size, corners=corners, patternWasFound=found_pattern)
             cv.imshow("test", img)
 
+            # cv.imwrite("CameraCalibExample.png", img)  # TODO: remove report code
         return img_points, obj_points
+
+    def find_homography(self):
+        GOOD_MATCH_PERCENT = 0.15
+        grabbed, img = self.camera.read()
+
+        if not grabbed:
+            raise Exception("Camera not read")
+
+        grayscale = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
+        pattern = cv.imread('pattern.png', cv.IMREAD_GRAYSCALE)
+
+        def test(i):
+            n = np.full_like(i, 255)
+            size = (9, 6)
+            found_pattern, corners = cv.findChessboardCorners(i, patternSize=(9, 6))
+            term = (cv.TERM_CRITERIA_EPS + cv.TERM_CRITERIA_COUNT, 30, 0.1)
+
+            # improve accuracy of the corner detection
+            # cv.cornerSubPix(grayscale, corners, (5, 5), (-1, -1), term)
+            cv.drawChessboardCorners(image=n, patternSize=size, corners=corners, patternWasFound=found_pattern)
+            return n, corners
+
+        grayscale, keypoints1 = test(grayscale)
+        pattern, keypoints2 = test(pattern)
+        show_resized("base", grayscale)
+        show_resized("pattern", pattern)
+        orb = cv2.SIFT_create()
+       # keypoints1, descriptors1 = orb.detectAndCompute(grayscale, None)
+       # keypoints2, descriptors2 = orb.detectAndCompute(pattern, None)
+
+        # Match features.
+        # matcher = cv2.DescriptorMatcher_create(cv2.DESCRIPTOR_MATCHER_FLANNBASED)
+
+       # matches = {"queryIdx",}
+
+        # matches = matcher.match(descriptors1, descriptors2, None)
+        # matches.sort(key=lambda x: x.distance, reverse=False)
+
+        # Extract location of good matches
+        # numGoodMatches = int(len(matches) * GOOD_MATCH_PERCENT)
+        # matches = matches[:numGoodMatches]
+
+        # imMatches = cv2.drawMatches(grayscale, keypoints1, pattern, keypoints2, matches, None)
+
+       # if debug:
+       #     show_resized("Matches", imMatches)
+       #     cv2.imwrite("Matches.png", imMatches)
+
+#        ptCam = np.zeros((len(matches), 2), dtype=np.float32)
+ #       ptPattern = np.zeros((len(matches), 2), dtype=np.float32)
+
+        ptCam = keypoints1
+        ptPattern = keypoints2
+
+        return cv.findHomography(ptCam, ptPattern, cv2.RANSAC), img ,pattern
 
     def focus_add(self):
         self.focus += self.focus_increment
@@ -173,19 +233,38 @@ if __name__ == '__main__':
     calib.set_access('1')
     calib.activate_camera()
     calib.show_camera()
+    calib.camera.set(cv.CAP_PROP_AUTOFOCUS, 1)
+    cv.waitKey(1000)
 
-    rms, camera_matrix, dist_coefs, rvecs, tvecs = calib.calibrate_fish_eye_distortion(repeats=10)
+    distort = False
 
-    grabbed, img = calib.camera.read(,
+    homo = True
 
-    h, w = img.shape[:2]
-    newcameramtx, roi = cv.getOptimalNewCameraMatrix(camera_matrix, dist_coefs, (w, h), 1, (w, h))
+    if distort:
 
-    dst = cv.undistort(img, camera_matrix, dist_coefs, None, newcameramtx)
+        rms, camera_matrix, dist_coefs, rvecs, tvecs = calib.calibrate_fish_eye_distortion(repeats=10)
 
-    # crop and save the image
-    x, y, w, h = roi
-    dst = dst[y:y + h, x:x + w]
 
-    cv.imshow("undistorted", dst)
+        grabbed, img = calib.camera.read()
+
+        h, w = img.shape[:2]
+        newcameramtx, roi = cv.getOptimalNewCameraMatrix(camera_matrix, dist_coefs, (w, h), 1, (w, h))
+
+        dst = cv.undistort(img, camera_matrix, dist_coefs, None, newcameramtx)
+
+        # crop and save the image
+        x, y, w, h = roi
+        dst = dst[y:y + h, x:x + w]
+
+        cv.imshow("undistorted", dst)
+
+    if homo:
+        (h, mask), im1, im2 = calib.find_homography()
+        print("h" + str(h))
+        print("mask" + str(mask))
+        height, width = im2.shape
+        im1Reg = cv2.warpPerspective(im1, h, (width, height))
+
+        show_resized("reg",im1Reg)
     cv.waitKey(0)
+
