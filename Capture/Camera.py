@@ -2,6 +2,9 @@
 import json
 import cv2 as cv
 from platform import system
+
+import numpy as np
+
 from Capture.CameraBase import CameraBase
 
 
@@ -11,6 +14,7 @@ class Cam(CameraBase):
         try:
             with open(config_file) as fp:
                 self.config = json.load(fp)
+                self.config['h'] = np.array(self.config['h'])
 
         except (IOError, FileNotFoundError):
             print("Unable to load camera config file. Run Calibration")
@@ -40,8 +44,9 @@ class Cam(CameraBase):
         """get the image with camera correction"""
         retval, img = self.camera.read()
 
+        corrected_img = cv.warpPerspective(img,  self.config['h'], (self.config['width'], self.config['height']), borderMode=cv.BORDER_CONSTANT)
         if retval and img is not None:
-            return img
+            return img, corrected_img
         else:
             pass  # todo: decide what to do in case of capture fail
 

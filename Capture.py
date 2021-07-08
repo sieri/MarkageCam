@@ -141,10 +141,12 @@ class CaptureApp(CameraApp):
             db.insert(self.expected_text)
 
     def capture_image(self, _event=None):
-        img = self.cam.get_image()
-        newImage = DB.BaseImg(img, datetime.now(), self.expected_text)
+        img, corrected = self.cam.get_image()
         with DB.DbConnector() as db:
-            db.insert(newImage)
+            new_image = DB.BaseImg(img, datetime.now(), self.expected_text)
+            db.insert(new_image)
+            new_corrected = DB.CorrectedImg(corrected,new_image)
+            db.insert(new_corrected)
 
     def on_close(self):
         self.network.stop()

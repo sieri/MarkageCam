@@ -190,6 +190,15 @@ class CalibApp(CameraApp):
         self.ent_camera_ip['state'] = tk.DISABLED
 
     def on_save_config_entry(self):
+
+        self.cam.calibrate()
+        try:
+            pass
+        except Exception as e:
+            messagebox.showerror("Error", e)
+            self.change_state(States.CAMERA_CONFIRMED)
+            return
+
         filename = tk.filedialog.asksaveasfilename(
             initialdir=".",
             title="Save file",

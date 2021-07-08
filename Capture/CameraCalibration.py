@@ -1,4 +1,6 @@
+import inspect
 import json
+import os
 
 import cv2
 import cv2 as cv
@@ -157,14 +159,16 @@ class CamCalib(CameraBase):
             raise Exception("Camera not read")
 
         grayscale = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
-        pattern = cv.imread('pattern.png', cv.IMREAD_GRAYSCALE)
+        # TODO: get the numbers from a cleaner source
+        pattern_path = os.path.join(os.path.dirname(inspect.getfile(CamCalib)), 'pattern.png')
+        pattern = cv.imread(pattern_path, cv.IMREAD_GRAYSCALE)
 
         pt_cam = self.get_chessboard(grayscale, size)
         pt_pattern = self.get_chessboard(pattern, size)
 
         h, _mask = cv.findHomography(pt_cam, pt_pattern, cv2.RHO)
 
-        #get the size of the base image
+        # get the size of the base image
         height, width = grayscale.shape
         corners = np.array([
             [0, 0],
@@ -182,10 +186,9 @@ class CamCalib(CameraBase):
              [0, 1, -by],
              [0, 0, 1]]
 
-        final = np.matmul(A, h) # multiply the matrix to add the translation in the perspective shift
+        final = np.matmul(A, h)  # multiply the matrix to add the translation in the perspective shift
 
         return final, bwidth, bheight
-
 
     def focus_add(self):
         self.focus += self.focus_increment
@@ -198,6 +201,9 @@ class CamCalib(CameraBase):
     def update_focus(self):
         self.camera.set(cv.CAP_PROP_FOCUS, self.focus)
 
+    def calibrate(self):
+        self.h, self.width, self.height = self.find_homography()
+
     def save(self, filename):
 
         with open(filename, 'w') as fp:
@@ -206,7 +212,10 @@ class CamCalib(CameraBase):
                     json.dumps(
                         {
                             'cameraAccess': self.access,
-                            'focus': self.focus
+                            'focus': self.focus,
+                            'h': self.h.tolist(),
+                            'width': self.width,
+                            'height': self.height,
                         },
                         indent=4
                     )
@@ -250,13 +259,14 @@ if __name__ == '__main__':
             if event == cv.EVENT_LBUTTONDOWN:
                 print("coord" + str((x, y)))
 
+
         g, img = calib.camera.read()
         cv.setMouseCallback('Camera', get_coord)
 
         h, width, height = calib.find_homography()
         print("h" + str(h))
 
-        im1Reg = cv.warpPerspective(img,  h, (width, height), borderMode=cv.BORDER_CONSTANT)
+        im1Reg = cv.warpPerspective(img, h, (width, height), borderMode=cv.BORDER_CONSTANT)
 
         show_resized("img1 reg", im1Reg)
 
