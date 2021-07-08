@@ -13,6 +13,7 @@ if debug:
 
 local_debug = True
 
+
 class CamCalib(CameraBase):
     """
     A basic camera access used as a viewfinder for the calibration
@@ -91,9 +92,21 @@ class CamCalib(CameraBase):
             print("camera matrix:\n", camera_matrix)
             print("distortion coefficients: ", dist_coefs.ravel())
 
-
-
         return rms, camera_matrix, dist_coefs, rvecs, tvecs
+
+    @staticmethod
+    def get_chessboard(i, size=(9, 6)):
+        n = np.full_like(i, 255)
+
+        found_pattern, corners = cv.findChessboardCorners(i, patternSize=size)
+        if not found_pattern:
+            raise Exception("Pattern not found")
+
+        term = (cv.TERM_CRITERIA_EPS + cv.TERM_CRITERIA_COUNT, 30, 0.1)
+
+        # improve accuracy of the corner detection
+        cv.cornerSubPix(i, corners, (5, 5), (-1, -1), term)
+        return corners
 
     def process_chessboard(self, size=(9, 6)):
         """
@@ -122,14 +135,8 @@ class CamCalib(CameraBase):
 
         if not grabbed:
             raise Exception("Camera not read")
-        found_pattern, corners = cv.findChessboardCorners(grayscale, patternSize=(9, 6))
-        if not found_pattern:
-            raise Exception("Pattern not found")
 
-        term = (cv.TERM_CRITERIA_EPS + cv.TERM_CRITERIA_COUNT, 30, 0.1)
-
-        # improve accuracy of the corner detection
-        cv.cornerSubPix(grayscale, corners, (5, 5), (-1, -1), term)
+        corners = self.get_chessboard(grayscale, size)
 
         # add the points
         obj_points.append(objp)  # the base array to mark the position
@@ -143,8 +150,7 @@ class CamCalib(CameraBase):
             # cv.imwrite("CameraCalibExample.png", img)  # TODO: remove report code
         return img_points, obj_points
 
-    def find_homography(self):
-        GOOD_MATCH_PERCENT = 0.15
+    def find_homography(self, size=(9, 6)):
         grabbed, img = self.camera.read()
 
         if not grabbed:
@@ -153,50 +159,33 @@ class CamCalib(CameraBase):
         grayscale = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
         pattern = cv.imread('pattern.png', cv.IMREAD_GRAYSCALE)
 
-        def test(i):
-            n = np.full_like(i, 255)
-            size = (9, 6)
-            found_pattern, corners = cv.findChessboardCorners(i, patternSize=(9, 6))
-            term = (cv.TERM_CRITERIA_EPS + cv.TERM_CRITERIA_COUNT, 30, 0.1)
+        pt_cam = self.get_chessboard(grayscale, size)
+        pt_pattern = self.get_chessboard(pattern, size)
 
-            # improve accuracy of the corner detection
-            # cv.cornerSubPix(grayscale, corners, (5, 5), (-1, -1), term)
-            cv.drawChessboardCorners(image=n, patternSize=size, corners=corners, patternWasFound=found_pattern)
-            return n, corners
+        h, _mask = cv.findHomography(pt_cam, pt_pattern, cv2.RHO)
 
-        grayscale, keypoints1 = test(grayscale)
-        pattern, keypoints2 = test(pattern)
-        show_resized("base", grayscale)
-        show_resized("pattern", pattern)
-        orb = cv2.SIFT_create()
-       # keypoints1, descriptors1 = orb.detectAndCompute(grayscale, None)
-       # keypoints2, descriptors2 = orb.detectAndCompute(pattern, None)
+        #get the size of the base image
+        height, width = grayscale.shape
+        corners = np.array([
+            [0, 0],
+            [0, height - 1],
+            [width - 1, height - 1],
+            [width - 1, 0]
+        ])
 
-        # Match features.
-        # matcher = cv2.DescriptorMatcher_create(cv2.DESCRIPTOR_MATCHER_FLANNBASED)
+        # perspective shift those corners
+        corners = cv.perspectiveTransform(np.float32([corners]), h)[0]
+        bx, by, bwidth, bheight = cv.boundingRect(corners)  # bx, by will be mapped to negative values
 
-       # matches = {"queryIdx",}
+        # create a translation matrix to move them inside
+        A = [[1, 0, -bx],
+             [0, 1, -by],
+             [0, 0, 1]]
 
-        # matches = matcher.match(descriptors1, descriptors2, None)
-        # matches.sort(key=lambda x: x.distance, reverse=False)
+        final = np.matmul(A, h) # multiply the matrix to add the translation in the perspective shift
 
-        # Extract location of good matches
-        # numGoodMatches = int(len(matches) * GOOD_MATCH_PERCENT)
-        # matches = matches[:numGoodMatches]
+        return final, bwidth, bheight
 
-        # imMatches = cv2.drawMatches(grayscale, keypoints1, pattern, keypoints2, matches, None)
-
-       # if debug:
-       #     show_resized("Matches", imMatches)
-       #     cv2.imwrite("Matches.png", imMatches)
-
-#        ptCam = np.zeros((len(matches), 2), dtype=np.float32)
- #       ptPattern = np.zeros((len(matches), 2), dtype=np.float32)
-
-        ptCam = keypoints1
-        ptPattern = keypoints2
-
-        return cv.findHomography(ptCam, ptPattern, cv2.RANSAC), img ,pattern
 
     def focus_add(self):
         self.focus += self.focus_increment
@@ -241,9 +230,7 @@ if __name__ == '__main__':
     homo = True
 
     if distort:
-
         rms, camera_matrix, dist_coefs, rvecs, tvecs = calib.calibrate_fish_eye_distortion(repeats=10)
-
 
         grabbed, img = calib.camera.read()
 
@@ -259,12 +246,18 @@ if __name__ == '__main__':
         cv.imshow("undistorted", dst)
 
     if homo:
-        (h, mask), im1, im2 = calib.find_homography()
+        def get_coord(event, x, y, flag, param):
+            if event == cv.EVENT_LBUTTONDOWN:
+                print("coord" + str((x, y)))
+
+        g, img = calib.camera.read()
+        cv.setMouseCallback('Camera', get_coord)
+
+        h, width, height = calib.find_homography()
         print("h" + str(h))
-        print("mask" + str(mask))
-        height, width = im2.shape
-        im1Reg = cv2.warpPerspective(im1, h, (width, height))
 
-        show_resized("reg",im1Reg)
+        im1Reg = cv.warpPerspective(img,  h, (width, height), borderMode=cv.BORDER_CONSTANT)
+
+        show_resized("img1 reg", im1Reg)
+
     cv.waitKey(0)
-
