@@ -31,8 +31,8 @@ class CaptureApp(CameraApp):
 
 
         # gui
-        self.cvn_camera_viewfinder = tk.Canvas()
-        self.cvn_camera_viewfinder.pack()
+        self._cvn_camera_viewfinder = tk.Canvas()
+        self._cvn_camera_viewfinder.pack()
 
         self.meta_frame = tk.Frame(root)
         self.expected_frame = tk.Frame(self.meta_frame)
@@ -60,7 +60,7 @@ class CaptureApp(CameraApp):
         self.ent_x_repeats.insert(0, "0")
         self.ent_y_repeats.insert(0, "0")
 
-        self.root.bind('c', self.capture_image)
+        self._root.bind('c', self.capture_image)
 
         # state machine
         self.state = None
@@ -73,15 +73,13 @@ class CaptureApp(CameraApp):
 
         self.network = TCP_server(self.capture_image)
 
-
-
     def exec(self):
         """
         run the application main loop till the end
         :return: None, only when exec finished
         """
-        self.root.after(100, self.change_state, States.INITIAL)  # enter the state once gui is setup
-        self.root.mainloop()
+        self._root.after(100, self.change_state, States.INITIAL)  # enter the state once gui is setup
+        self._root.mainloop()
 
     def change_state(self, new_state):
         if self.state != new_state:
@@ -90,10 +88,10 @@ class CaptureApp(CameraApp):
             self.transitions[self.state]()
 
     def on_entry_initial(self):
-        self.cvn_camera_viewfinder.create_rectangle(
+        self._cvn_camera_viewfinder.create_rectangle(
             0, 0,
-            self.cvn_camera_viewfinder.winfo_width(),
-            self.cvn_camera_viewfinder.winfo_height(),
+            self._cvn_camera_viewfinder.winfo_width(),
+            self._cvn_camera_viewfinder.winfo_height(),
             fill='gray'
         )
 
@@ -114,18 +112,18 @@ class CaptureApp(CameraApp):
         self.change_state(States.CAMERA_ACTIVATION)
 
     def on_entry_camera_activation(self):
-        self.cam = Cam(self.config_filename)
+        self._cam = Cam(self.config_filename)
 
-        if self.cam.activate_camera():
+        if self._cam.activate_camera():
             self.change_state(States.CAMERA_OPEN)
         else:
             self.change_state(States.ENTER_FILE)
 
     def on_entry_camera_open(self):
-        self.cam.show_camera(
+        self._cam.show_camera(
             (
-                self.cvn_camera_viewfinder.winfo_width(),
-                self.cvn_camera_viewfinder.winfo_height()
+                self._cvn_camera_viewfinder.winfo_width(),
+                self._cvn_camera_viewfinder.winfo_height()
             )
         )
 
@@ -141,16 +139,16 @@ class CaptureApp(CameraApp):
             db.insert(self.expected_text)
 
     def capture_image(self, _event=None):
-        img, corrected = self.cam.get_image()
+        img, corrected = self._cam.get_image()
         with DB.DbConnector() as db:
             new_image = DB.BaseImg(img, datetime.now(), self.expected_text)
             db.insert(new_image)
             new_corrected = DB.CorrectedImg(corrected,new_image)
             db.insert(new_corrected)
 
-    def on_close(self):
+    def _on_close(self):
         self.network.stop()
-        super().on_close()
+        super()._on_close()
 
 if __name__ == '__main__':
     app = CaptureApp(tk.Tk())

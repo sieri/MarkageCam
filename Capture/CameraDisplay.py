@@ -13,32 +13,31 @@ class DisplayBase:
 
     def __init__(self, capture):
 
-        self.thread = Thread(target=self.get, args=())
-        self.thread.setName("Camera capture for display")
-        self.capture = capture
+        self._thread = Thread(target=self.get, args=())
+        self._thread.setName("Camera capture for display")
+        self._capture = capture
         self.lastFrame = None
-        self.stopped = False
+        self._stopped = False
 
     def start(self):
-        self.stopped = False
-        self.thread.start()
+        self._stopped = False
+        self._thread.start()
         return self
 
     def get(self):
-        while not self.stopped:
-            grabbed, image = self.capture.read()
+        while not self._stopped:
+            grabbed, image = self._capture.read()
             if grabbed:
                 self.show(image)
                 cv.waitKey(1)
             else:
                 self.stop()
 
-
     def show(self, image):
         self.lastFrame = image
 
     def stop(self):
-        self.stopped = True
+        self._stopped = True
 
 
 class DebugDisplay(DisplayBase):
@@ -48,10 +47,10 @@ class DebugDisplay(DisplayBase):
 
     def __init__(self, win_name: str, capture):
         super().__init__(capture)
-        self.win_name = win_name
+        self._win_name = win_name
 
     def show(self, image):
-        cv.imshow(self.win_name, image)
+        cv.imshow(self._win_name, image)
 
 
 class TkDisplay(DisplayBase):

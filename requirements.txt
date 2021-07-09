@@ -1,6 +1,6 @@
-numpy~=1.20.3
+numpy==1.21.0
 opencv-python~=4.5.2.52
 pytesseract~=0.3.7
 matplotlib~=3.4.2
 python-dateutil>=2.7
-Pillow~=8.2.0
+Pillow==8.3.1

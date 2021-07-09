@@ -5,6 +5,8 @@ import tkinter as tk
 from tkinter import messagebox, filedialog
 from enum import Enum, auto
 
+from environement import debug
+
 """
 Script to run the camera calibration app
 """
@@ -18,7 +20,7 @@ class States(Enum):
     SAVE_CONFIG = auto()
 
 
-stateText = {
+state_text = {
     States.INITIAL: "Please enter camera IP",
     States.ACTIVATE_CAMERA: "",
     States.VIEW_FINDER: "Please confirm it's the correct camera",
@@ -39,10 +41,9 @@ class CalibApp(CameraApp):
         """
         super().__init__(root, title, delay)
 
-        self.cam = CamCalib()
-        self.state = None
-        self.frame = None
-        self.keep_updating = False
+        self._cam = CamCalib()
+        self.__state = None
+
         self.ckb_camera_confirm_value = tk.BooleanVar()
 
         # create widgets
@@ -54,7 +55,7 @@ class CalibApp(CameraApp):
         self.ent_camera_ip = tk.Entry(self.ip_frame)
         self.btn_camera_ip = tk.Button(self.ip_frame, text="Confirm", command=self.event_btn_confirm_ip)
 
-        self.cvn_camera_viewfinder = tk.Canvas()
+        self._cvn_camera_viewfinder = tk.Canvas()
         self.ckb_camera_confirm = tk.Checkbutton(
             text='Correct camera',
             variable=self.ckb_camera_confirm_value,
@@ -66,13 +67,13 @@ class CalibApp(CameraApp):
         self.btn_focus_add = tk.Button(
             self.focus_frame,
             text='+',
-            command=self.cam.focus_add
+            command=self._cam.focus_add
         )
 
         self.btn_focus_sub = tk.Button(
             self.focus_frame,
             text='-',
-            command=self.cam.focus_sub
+            command=self._cam.focus_sub
         )
 
         self.btn_focus_confirm = tk.Button(
@@ -88,7 +89,7 @@ class CalibApp(CameraApp):
         self.lbl_camera_IP.pack(side=tk.LEFT)
         self.ent_camera_ip.pack(side=tk.LEFT)
         self.btn_camera_ip.pack(side=tk.LEFT)
-        self.cvn_camera_viewfinder.pack()
+        self._cvn_camera_viewfinder.pack()
         self.ckb_camera_confirm.pack()
 
         self.focus_frame.pack()
@@ -113,27 +114,28 @@ class CalibApp(CameraApp):
         run the application main loop till the end
         :return: None, only when exec finished
         """
-        self.root.after(100, self.change_state, States.INITIAL)  # enter the state once gui is setup
-        self.root.mainloop()
+        self._root.after(100, self.change_state, States.INITIAL)  # enter the state once gui is setup
+        self._root.mainloop()
 
     def change_state(self, new_state):
-        if self.state != new_state:
-            self.state = new_state
+        if self.__state != new_state:
+            self.__state = new_state
             self.lbl_state_text.configure(
-                text=stateText[self.state]
+                text=state_text[self.__state]
             )
-
+            if debug:
+                print("state: ", self.__state)
             # call the new state's entry method
-            self.transitions[self.state]()
+            self.transitions[self.__state]()
 
     def on_initial_entry(self):
-        self.cam.close_camera()
+        self._cam.close_camera()
         self.deactivate_frames_update()
 
-        self.cvn_camera_viewfinder.create_rectangle(
+        self._cvn_camera_viewfinder.create_rectangle(
             0, 0,
-            self.cvn_camera_viewfinder.winfo_width(),
-            self.cvn_camera_viewfinder.winfo_height(),
+            self._cvn_camera_viewfinder.winfo_width(),
+            self._cvn_camera_viewfinder.winfo_height(),
             fill='gray'
         )
 
@@ -149,19 +151,19 @@ class CalibApp(CameraApp):
         self.btn_focus_sub['state'] = tk.DISABLED
 
     def on_activate_camera_entry(self):
-        self.cam.set_access(self.ent_camera_ip.get())
+        self._cam.set_access(self.ent_camera_ip.get())
 
-        if not self.cam.activate_camera():
+        if not self._cam.activate_camera():
             self.change_state(States.INITIAL)
             messagebox.showerror("Error", "couldn't open the camera")
         else:
             self.change_state(States.VIEW_FINDER)
 
     def on_view_finder_entry(self):
-        self.cam.show_camera(
+        self._cam.show_camera(
             (
-                self.cvn_camera_viewfinder.winfo_width(),
-                self.cvn_camera_viewfinder.winfo_height()
+                self._cvn_camera_viewfinder.winfo_width(),
+                self._cvn_camera_viewfinder.winfo_height()
             )
         )
         self.activate_frame_updates()
@@ -191,7 +193,7 @@ class CalibApp(CameraApp):
 
     def on_save_config_entry(self):
 
-        self.cam.calibrate()
+        self._cam.calibrate()
         try:
             pass
         except Exception as e:
@@ -208,7 +210,7 @@ class CalibApp(CameraApp):
         if filename is None or len(filename) == 0:
             self.change_state(States.CAMERA_CONFIRMED)
         else:
-            if not self.cam.save(filename):
+            if not self._cam.save(filename):
                 messagebox.showerror("Error", "couldn't save the file")
                 self.change_state(States.CAMERA_CONFIRMED)
             self.change_state(States.INITIAL)

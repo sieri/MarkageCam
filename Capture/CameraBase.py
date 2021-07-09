@@ -5,8 +5,8 @@ from Capture.CameraDisplay import TkDisplay, DebugDisplay
 class CameraBase:
 
     def __init__(self):
-        self.camera = None
-        self.display = None
+        self._camera = None
+        self._display = None
 
     def activate_camera(self):
         pass
@@ -18,10 +18,10 @@ class CameraBase:
         :return: None
         """
         if scale is None:
-            self.display = DebugDisplay(title, self.camera)
+            self._display = DebugDisplay(title, self._camera)
         else:
-            self.display = TkDisplay(self.camera, scale)
-        self.display.start()
+            self._display = TkDisplay(self._camera, scale)
+        self._display.start()
 
     def hide_camera(self):
         """
@@ -29,19 +29,19 @@ class CameraBase:
         camera still opened
         :return: None
         """
-        if self.display is not None:
-            self.display.stop()
+        if self._display is not None:
+            self._display.stop()
 
     def close_camera(self):
         """close the camera"""
         self.hide_camera()
 
-        if self.camera is not None:
-            self.camera.release()
+        if self._camera is not None:
+            self._camera.release()
 
     def get_display_frame(self) -> tkinter.PhotoImage:
         """
         get the last frame
         :return: the last frame captured
         """
-        return self.display.lastFrame
+        return self._display.lastFrame
