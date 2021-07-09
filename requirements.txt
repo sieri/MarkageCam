@@ -4,3 +4,4 @@ pytesseract~=0.3.7
 matplotlib~=3.4.2
 python-dateutil>=2.7
 Pillow==8.3.1
+OpenOPC-WF==1.3.3
