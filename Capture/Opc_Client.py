@@ -11,7 +11,7 @@ synchro = None
 
 def get_text(server_name=default_opc_server):
     with OpcClient(server_name) as opc:
-        return opc.opc['.R_Texte_EBS']
+        return opc.opc['R_Texte_EBS']
 
 
 def set_synchro(callback, server_name=default_opc_server):
@@ -49,7 +49,7 @@ class Synchro:
         trigger = False
         with OpcClient(self.server_name) as opc:
             while self.running:
-                if opc.opc['.M_Trigger_Camera']:
+                if opc.opc['M_Trigger_Camera']:
                     if not trigger:
                         self.callback()
                         trigger = True
@@ -82,7 +82,7 @@ if __name__ == '__main__':
 
         if test_setup:
             with OpcClient('Matrikon.OPC.Simulation') as opc:
-                opc.opc['.R_Texte_EBS'] = 'test'
+                opc.opc['R_Texte_EBS'] = 'test'
 
         set_synchro(callback)
 
