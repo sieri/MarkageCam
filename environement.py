@@ -1,5 +1,5 @@
 debug = True
-test_setup = True
+test_setup = False
 image_path = "./img/"
 
 if not test_setup:

@@ -1,7 +1,8 @@
 import time
 from threading import Thread
-
 import OpenOPC
+# noinspection PyUnresolvedReferences
+import win32timezone  # import purely for pyinstaller
 
 from environement import default_opc_server, pulling_time_syncro, test_setup
 
@@ -72,21 +73,27 @@ class OpcClient:
 
 
 if __name__ == '__main__':
-    def callback():
-        print("Taking picture now")
+    print("Trying to connect to server " + default_opc_server)
+    print("\n ====================================\n")
+    try:
+        def callback():
+            print("Taking picture now")
 
 
-    if test_setup:
-        with OpcClient('Matrikon.OPC.Simulation') as opc:
-            opc.opc['.R_Texte_EBS'] = 'test'
+        if test_setup:
+            with OpcClient('Matrikon.OPC.Simulation') as opc:
+                opc.opc['.R_Texte_EBS'] = 'test'
 
-    set_synchro(callback)
+        set_synchro(callback)
 
-    for i in range(60):
-        time.sleep(1)
-        string = get_text()
-        print('Reading the text', string)
+        for i in range(60):
+            time.sleep(1)
+            string = get_text()
+            print('Reading the text', string)
 
-    kill_synchro()
+        kill_synchro()
+        print("end test")
+    except OpenOPC.OPCError as e:
+        print('Error', e)
 
-    print("end test")
+    input('press enter key to exit..')

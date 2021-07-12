@@ -1,1 +1,1 @@
-pyinstaller ../Capture/Opc_client.py
+pyinstaller -F ../Capture/Opc_client.py
