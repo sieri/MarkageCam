@@ -1,5 +1,10 @@
 venv/
+venv32/
 .idea/
 *.json
 *.sqlite3
 img/
+
+!installers/
+installers/*
+!installers/*.bat
