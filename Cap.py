@@ -89,7 +89,7 @@ class CaptureApp(CameraApp):
         :return: None, only when exec finished
         """
         self._root.after(100, self.change_state, States.INITIAL)  # enter the state once gui is setup
-        self._root.mainloop()
+        super().exec()
 
     def change_state(self, new_state):
         if self.state != new_state:

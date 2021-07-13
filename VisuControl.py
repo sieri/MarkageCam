@@ -19,6 +19,7 @@ class AppVisuControl(BaseApp):
         self._capture._on_close()
         super()._on_close()
 
+
 if __name__ == '__main__':
     app = AppVisuControl(tk.Tk())
     app.exec()
