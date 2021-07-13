@@ -1,3 +1,10 @@
+# used library only work with 32 bits interpreters raise error if not the case
+import struct
+
+n_bit = struct.calcsize("P") * 8
+if n_bit == 64:
+    raise NotImplementedError
+
 import time
 from threading import Thread
 import OpenOPC

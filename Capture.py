@@ -8,6 +8,7 @@ import tkinter as tk
 from enum import Enum, auto
 from tkinter import messagebox, filedialog
 from Data import DB
+from Capture import Opc_Client
 
 
 class States(Enum):
