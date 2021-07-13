@@ -1,14 +1,38 @@
 import os
 import socket
+import subprocess
 import time
 from threading import Thread
 
-import environement
+from environement import default_opc_server, pulling_time_syncro, test_setup, debug
+
+# noinspection DuplicatedCode
+synchro = None
+
+
+def get_text(server_name=default_opc_server):
+    return "Text wanted"
+
+
+def set_synchro(callback, server_name=default_opc_server):
+    global synchro
+    if synchro is not None:
+        synchro.callback = callback
+    else:
+        synchro = TCP_server(callback)
+        synchro.start()
+        subprocess.Popen('python ./tests/AutomateSimulator.py')
+
+
+def kill_synchro():
+    global synchro
+    # noinspection PyUnresolvedReferences
+    synchro.stop()
 
 
 class TCP_server:
 
-    def __init__(self, callback, host='127.0.0.1', port = 65433):
+    def __init__(self, callback, host='127.0.0.1', port=65433):
         self.socket = None
         self.host = host
         self.port = port
@@ -43,7 +67,7 @@ class TCP_server:
                                 break
                             self.callback()
                 except ConnectionError as e:
-                    if environement.debug:
+                    if debug:
                         print(e)
                 except OSError:
                     pass
@@ -52,6 +76,7 @@ class TCP_server:
 if __name__ == '__main__':
     def test():
         print("called back")
+
 
     serv = TCP_server(test)
 

@@ -1,6 +1,7 @@
 debug = True
-test_setup = False
+test_setup = True
 image_path = "./img/"
+save_to_db = True
 
 if not test_setup:
     default_opc_server = "OPC.SimaticHMI.CoRtHmiRTm"

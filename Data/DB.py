@@ -8,8 +8,7 @@ from Data.Filters import *
 
 from datetime import datetime, timezone
 
-from environement import image_path,debug
-
+from environement import image_path, debug
 
 tables_names = ["EXPECTED_TEXT", "BASE_IMG", "CORRECTED_IMG"]
 
@@ -42,6 +41,7 @@ tables_schemas = {
 
 _currently_open = None
 
+
 class Data:
     tableName = "INVALID"
 
@@ -61,6 +61,7 @@ class Data:
             ("_id",),
             (self.id,)
         )
+
 
 class DbConnector:
     """Save an image on the database"""
@@ -90,6 +91,11 @@ class DbConnector:
             self.db.close()
 
     def insert(self, data: Data):
+        if data.id is not None:
+            if debug:
+                print('No Insert, already in')
+            return
+
         cur = self.db.cursor()
         data.save()
         element_list = data.get_element()
@@ -97,7 +103,7 @@ class DbConnector:
         text = []
         val = []
 
-        for t,v in zip(element_list[0],element_list[1]):
+        for t, v in zip(element_list[0], element_list[1]):
             if v is not None:
                 text.append(t)
                 val.append(v)
@@ -116,7 +122,7 @@ class DbConnector:
         except sqlite3.Error as e:
             print(e)
 
-    def add_filter(self, f : Filter):
+    def add_filter(self, f: Filter):
         self.filters.append(f)
 
     def generate_filter(self):
@@ -167,9 +173,6 @@ class DbConnector:
                 query = '''CREATE TABLE ''' + t + tables_schemas[t]
                 self.db.execute(query)
                 self.db.commit()
-
-
-
 
 
 class ExpectedText(Data):
@@ -291,7 +294,6 @@ class CorrectedImg(Data):
             ("_id", "img_path", "base_img"),
             (self.id, self.image_path, self.base_img.id)
         )
-
 
 
 expected_texts = dict()

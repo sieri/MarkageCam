@@ -33,16 +33,16 @@ class Cam(CameraBase):
 
         if system() == "Windows":
             # windows specific fix for a warning on opencv camera close
-            self.camera = cv.VideoCapture(access, cv.CAP_DSHOW)
+            self._camera = cv.VideoCapture(access, cv.CAP_DSHOW)
         else:
-            self.camera = cv.VideoCapture(access)
+            self._camera = cv.VideoCapture(access)
 
-        return self.camera.isOpened()
+        return self._camera.isOpened()
 
 
     def get_image(self):
         """get the image with camera correction"""
-        retval, img = self.camera.read()
+        retval, img = self._camera.read()
 
         corrected_img = cv.warpPerspective(img,  self.config['h'], (self.config['width'], self.config['height']), borderMode=cv.BORDER_CONSTANT)
         if retval and img is not None:
