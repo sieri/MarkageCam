@@ -172,9 +172,9 @@ class CaptureApp(CameraApp):
             db.insert(corrected.base_img)
             db.insert(corrected)
 
-    def _on_close(self):
+    def on_close(self):
         Opc.kill_synchro()
-        super()._on_close()
+        super().on_close()
 
 
 if __name__ == '__main__':

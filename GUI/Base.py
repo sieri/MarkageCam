@@ -15,7 +15,7 @@ class BaseApp:
             self._root.title(self._title)
 
             # bind close to allow proper release of threads
-            self._root.protocol("WM_DELETE_WINDOW", self._on_close)
+            self._root.protocol("WM_DELETE_WINDOW", self.on_close)
 
     def exec(self):
         """
@@ -25,7 +25,7 @@ class BaseApp:
         if self._root.master is None:
             self._root.mainloop()
 
-    def _on_close(self):
+    def on_close(self):
         if self._root.master is None:
             self._root.after(10, self._root.destroy)  # close the window, delays to give time to the threads to finish
 
@@ -60,7 +60,7 @@ class CameraApp(BaseApp):
 
             self._root.after(self._delay, self._update_frame)
 
-    def _on_close(self):
+    def on_close(self):
         self._keep_updating = False
         if self._cam is not None:
             self._cam.close_camera()  # release the camera

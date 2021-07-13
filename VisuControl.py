@@ -1,3 +1,6 @@
+import cv2 as cv
+from Utils.DebugDisplay import show_resized
+from Data import DB
 from GUI.Base import BaseApp
 import tkinter as tk
 from Cap import CaptureApp
@@ -11,14 +14,20 @@ class AppVisuControl(BaseApp):
 
         self.frame_capture.pack()
 
+        self._capture.on_capture_callback.append(self.treat_image)
+
+
+
     def exec(self):
         self._capture.exec()
         super().exec()
 
-    def _on_close(self):
-        self._capture._on_close()
-        super()._on_close()
+    def on_close(self):
+        self._capture.on_close()
+        super().on_close()
 
+    def treat_image(self, corrected : DB.CorrectedImg):
+        pass
 
 if __name__ == '__main__':
     app = AppVisuControl(tk.Tk())
