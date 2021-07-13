@@ -11,20 +11,23 @@ class BaseApp:
         self._root = root
         self._title = title
 
-        self._root.title(self._title)
+        if self._root.master is None:
+            self._root.title(self._title)
 
-        # bind close to allow proper release of threads
-        self._root.protocol("WM_DELETE_WINDOW", self._on_close)
+            # bind close to allow proper release of threads
+            self._root.protocol("WM_DELETE_WINDOW", self._on_close)
 
     def exec(self):
         """
         run the application main loop till the end
         :return: None, only when application closed finished
         """
-        self._root.mainloop()
+        if self._root.master is None:
+            self._root.mainloop()
 
     def _on_close(self):
-        self._root.after(10, self._root.destroy)  # close the window, delays to give time to the threads to finish
+        if self._root.master is None:
+            self._root.after(10, self._root.destroy)  # close the window, delays to give time to the threads to finish
 
 
 class CameraApp(BaseApp):

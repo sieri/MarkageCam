@@ -112,10 +112,10 @@ class CalibApp(CameraApp):
     def exec(self):
         """
         run the application main loop till the end
-        :return: None, only when exec finished
+        :return: None, only when exec finished, if no master
         """
         self._root.after(100, self.change_state, States.INITIAL)  # enter the state once gui is setup
-        self._root.mainloop()
+        super().exec()
 
     def change_state(self, new_state):
         if self.__state != new_state:
