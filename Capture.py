@@ -137,6 +137,7 @@ class CaptureApp(CameraApp):
 
         self.activate_frame_updates()
         Opc.set_synchro(self.capture_image)
+        self.update_text()
 
     def update_text(self):
         text = Opc.get_text()

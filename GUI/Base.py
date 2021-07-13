@@ -11,7 +11,7 @@ class BaseApp:
         self._root = root
         self._title = title
 
-        self._root._title = self._title
+        self._root.title(self._title)
 
         # bind close to allow proper release of threads
         self._root.protocol("WM_DELETE_WINDOW", self._on_close)
@@ -28,7 +28,6 @@ class BaseApp:
 
 
 class CameraApp(BaseApp):
-
 
     """Base application with a camera fied and a view finder displayed"""
     def __init__(self, root, title="Window", delay=15):
