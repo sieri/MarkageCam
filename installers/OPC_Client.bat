@@ -1,1 +1,1 @@
-pyinstaller -F ../Capture/Opc_client.py
+python setupOpcTest.py py2exe
