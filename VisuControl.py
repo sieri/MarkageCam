@@ -5,6 +5,7 @@ from GUI.Base import BaseApp
 import tkinter as tk
 from Cap import CaptureApp
 
+
 class AppVisuControl(BaseApp):
 
     def __init__(self, root, title="Visual Controller"):
@@ -16,8 +17,6 @@ class AppVisuControl(BaseApp):
 
         self._capture.on_capture_callback.append(self.treat_image)
 
-
-
     def exec(self):
         self._capture.exec()
         super().exec()
@@ -26,8 +25,9 @@ class AppVisuControl(BaseApp):
         self._capture.on_close()
         super().on_close()
 
-    def treat_image(self, corrected : DB.CorrectedImg):
+    def treat_image(self, corrected: DB.CorrectedImg):
         pass
+
 
 if __name__ == '__main__':
     app = AppVisuControl(tk.Tk())
