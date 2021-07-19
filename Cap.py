@@ -1,3 +1,7 @@
+"""
+Application managing the capture elements and a display of the screen
+"""
+
 import os.path
 from datetime import datetime
 
@@ -11,9 +15,9 @@ from environement import test_setup, save_to_db
 
 try:
     from Capture import Opc_Client as Opc
-except NotImplementedError:
+except NotImplementedError: # OPC client only function in a 32 bit environment
     if test_setup:
-        from Tests import OPC_Simulator as Opc
+        from Tests import OPC_Simulator as Opc # simulator of the automate connection same interface
     else:
         raise Exception("Need 32 bit interpeter")
 
@@ -26,6 +30,9 @@ class States(Enum):
 
 
 class CaptureApp(CameraApp):
+    """
+    Application needing to be run to capture the camera stream
+    """
     def __init__(self, root, title="Capture Window", delay=15):
         """
         constructor
@@ -92,12 +99,21 @@ class CaptureApp(CameraApp):
         super().exec()
 
     def change_state(self, new_state):
+        """
+        Iterates through the states, normally do not call this from outside
+        :param new_state: The new state to enter
+        :return:
+        """
         if self.state != new_state:
             self.state = new_state
             # call the new state's entry method
             self.transitions[self.state]()
 
     def on_entry_initial(self):
+        """
+        State entry method, fill the viewfinder, and check for default config, then exit
+        :return:
+        """
         self._cvn_camera_viewfinder.create_rectangle(
             0, 0,
             self._cvn_camera_viewfinder.winfo_width(),
@@ -111,6 +127,10 @@ class CaptureApp(CameraApp):
             self.change_state(States.ENTER_FILE)
 
     def on_entry_enter_file(self):
+        """
+        state entry method, read the file from dialogue then exit
+        :return:
+        """
         self.config_filename = filedialog.askopenfilename(
             initialdir=".",
             title="Select config",
@@ -120,6 +140,10 @@ class CaptureApp(CameraApp):
         self.change_state(States.CAMERA_ACTIVATION)
 
     def on_entry_camera_activation(self):
+        """
+        state entry method, open the camera, then exit to the corresponding state depending on the result
+        :return:
+        """
         self._cam = Cam(self.config_filename)
 
         if self._cam.activate_camera():
@@ -128,6 +152,9 @@ class CaptureApp(CameraApp):
             self.change_state(States.ENTER_FILE)
 
     def on_entry_camera_open(self):
+        """
+        state entry method, show the camera, and activate the synchronised capture
+        """
         self._cam.show_camera(
             (
                 self._cvn_camera_viewfinder.winfo_width(),
@@ -140,6 +167,10 @@ class CaptureApp(CameraApp):
         self.update_text()
 
     def update_text(self):
+        """
+        Update expected text information given the latest parameters
+        :return:
+        """
         text = Opc.get_text()
         x = int(self.ent_x_repeats.get())
         y = int(self.ent_y_repeats.get())
@@ -157,6 +188,11 @@ class CaptureApp(CameraApp):
 
 
     def capture_image(self, _event=None):
+        """
+        Capture image, and send it to the callback listeners
+        :param _event: not used
+        :return:
+        """
         img, corrected = self._cam.get_image()
         self.update_text()
         new_image = DB.BaseImg(img, datetime.now(), self.expected_text)
@@ -167,12 +203,21 @@ class CaptureApp(CameraApp):
             i(new_corrected)
 
     def save_to_db(self, corrected: DB.CorrectedImg):
+        """
+        Capture image callback that save the image to the Database and local file system
+        :param corrected:
+        :return:
+        """
         with DB.DbConnector() as db:
             db.insert(corrected.base_img.expected_text)
             db.insert(corrected.base_img)
             db.insert(corrected)
 
     def on_close(self):
+        """
+        Kill all
+        :return:
+        """
         Opc.kill_synchro()
         super().on_close()
 

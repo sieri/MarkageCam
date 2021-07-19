@@ -9,7 +9,14 @@ from Capture.CameraBase import CameraBase
 
 
 class Cam(CameraBase):
+    """
+    Camera used for capture, does perspective warping
+    """
     def __init__(self, config_file):
+        """
+        Read the camera configuration and create the object
+        :param config_file:
+        """
         super().__init__()
         try:
             with open(config_file) as fp:
@@ -21,6 +28,7 @@ class Cam(CameraBase):
             self.config = None
 
     def activate_camera(self):
+
         if self.config is None:
             return False
 
