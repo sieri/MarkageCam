@@ -11,7 +11,7 @@ from platform import system
 from environement import debug
 
 if debug:
-    from Utils.DebugDisplay import *
+    from ImgTreatement.DebugDisplay import *
 
 local_debug = True
 
