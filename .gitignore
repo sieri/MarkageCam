@@ -8,4 +8,3 @@ img/
 !installers/
 installers/*
 !installers/*.bat
-!installers/*.py
