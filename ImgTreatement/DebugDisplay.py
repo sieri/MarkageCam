@@ -25,8 +25,9 @@ def show_resized(window: str, img, max_size=720):
     cv.waitKey(1)
 
 
-
 def addToDisplay(title: str, img, grayscale = False):
+    if not grayscale:
+        img = cv.cvtColor(img, cv.COLOR_BGR2RGB)
     images.append(img)
     titles.append(title)
     grayscales.append(grayscale)
@@ -34,7 +35,7 @@ def addToDisplay(title: str, img, grayscale = False):
 
 def show():
     length = len(images)
-    if  length <= 2:
+    if length <= 2:
         x = 2
         y = 1
     elif length <= 4:
@@ -63,3 +64,11 @@ def show():
         plt.title(titles[i])
         plt.yticks([])
         plt.xticks([])
+    plt.ion()
+    plt.show()
+
+def init():
+    plt.figure()
+    images.clear()
+    titles.clear()
+    grayscales.clear()

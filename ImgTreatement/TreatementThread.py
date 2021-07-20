@@ -1,7 +1,7 @@
 import threading
 from threading import Thread
 from queue import Queue
-from TreatImg import process
+from ImgTreatement.TreatImg import process
 
 from Data import DB
 
