@@ -3,7 +3,7 @@ File setting up global variables for the system, describe the running condition
 """
 
 debug = True  # if true more printouts in the code
-test_setup = True  # if true indicates we are in a test setup and call the simulators for external hardware or software
+test_setup = False  # if true indicates we are in a test setup and call the simulators for external hardware or software
 save_to_db = True  # if true the images are saved to the database and local file system, if false they aren't
 image_path = "./img/"  # path from current folder where images are stored
 

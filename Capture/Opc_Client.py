@@ -16,7 +16,7 @@ from environement import default_opc_server, pulling_time_syncro, test_setup
 synchro = None
 
 address_text = 'R_Texte_EBS'
-address_trigger = 'R_Texte_EBS'
+address_trigger = 'M_Trigger_Camera'
 
 
 def get_text(server_name=default_opc_server):
@@ -91,6 +91,8 @@ if __name__ == '__main__':
 
 
         if test_setup:
+            address_text = "." + address_text
+            address_trigger = "." + address_trigger
             with OpcClient('Matrikon.OPC.Simulation') as opc:
                 opc.opc[address_text] = 'test'
 
