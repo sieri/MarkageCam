@@ -10,7 +10,7 @@ from datetime import datetime, timezone
 
 from environement import image_path, debug
 
-tables_names = ["EXPECTED_TEXT", "BASE_IMG", "CORRECTED_IMG"]
+tables_names = ["EXPECTED_TEXT", "BASE_IMG", "CORRECTED_IMG", "RESULT"]
 
 tables_schemas = {
     "EXPECTED_TEXT": """(_id INTEGER PRIMARY KEY,
@@ -36,7 +36,17 @@ tables_schemas = {
         REFERENCES BASE_IMG (_id)
             ON DELETE CASCADE
             ON UPDATE NO ACTION
-    );"""
+    );""",
+
+    "RESULT": """(_id INTEGER PRIMARY KEY,
+     img INTEGER NOT NULL,
+     accuracy  INTEGER NOT NULL,
+     correct BOOLEAN,
+     FOREIGN KEY (img)
+     REFERENCES CORRECTED_IMG (_id)
+        ON DELETE CASCADE
+        ON UPDATE NO ACTION
+     );"""
 }
 
 _currently_open = None
@@ -119,6 +129,7 @@ class DbConnector:
             cur.execute(sql, val)
             self.db.commit()
             data.id = cur.lastrowid
+            _add_current_data(type(data), data)
         except sqlite3.Error as e:
             print(e)
 
@@ -140,13 +151,23 @@ class DbConnector:
     def read(self, data_type, clearFilter=True):
         cur = self.db.cursor()
 
+        # override to read from memory instead of DB
+        if len(self.filters) == 1 and isinstance(self.filters[0], Filters.EqualFilter) and self.filters[0].label == "_id":
+            val = _current_data(data_type, self.filters[0].value)
+            if val is not None:
+                return [val]
         filters = self.generate_filter()
+
+
 
         sql = '''SELECT * FROM %s %s;''' % (data_type.tableName, filters)
         if debug:
             print(sql)
         cur.execute(sql)
         data = cur.fetchall()
+
+        if clearFilter:
+            self.filters.clear()
 
         strippped_indexes = [x[0] for x in cur.description]
         values_list = []
@@ -156,9 +177,6 @@ class DbConnector:
                 parameters[strippped_indexes[i]] = e[i]
             new_element = data_type.read(parameters)
             values_list.append(new_element)
-
-        if clearFilter:
-            self.filters.clear()
 
         return values_list
 
@@ -228,7 +246,7 @@ class BaseImg(Data):
             db = _currently_open
 
             db.add_filter(Filters.EqualFilter(expected_text_id, "_id"))
-            expected_text = db.read(ExpectedText)
+            expected_text = db.read(ExpectedText)[0]
 
         img_path = dict_parameter["img_path"]
 
@@ -264,23 +282,24 @@ class CorrectedImg(Data):
     @staticmethod
     def read(dict_parameter):
         id = dict_parameter["_id"]
-        time = datetime.fromtimestamp(dict_parameter["time"], tz=timezone.utc)
 
         base_img_id = dict_parameter["base_img"]
 
-        if base_imgs[base_img_id] is not None:
+        # noinspection DuplicatedCode
+        if base_img_id in base_imgs:
             base_img = base_imgs[base_img_id]
+
         else:
             db = _currently_open
 
-            db.add_filter(Filters.EqualFilter(base_img_id, "_id"))
-            base_img = db.read(ExpectedText)
+            db.add_filter(Filters.EqualFilter("_id", base_img_id))
+            base_img = db.read(BaseImg)[0]
 
         img_path = dict_parameter["img_path"]
 
         img = cv.imread(img_path)
 
-        return BaseImg(img, base_img, id)
+        return CorrectedImg(img, base_img, id)
 
     def save(self):
         if not os.path.isdir(image_path):
@@ -298,7 +317,7 @@ class CorrectedImg(Data):
 
 expected_texts = dict()
 base_imgs = dict()
-corrected_img = dict()
+corrected_imgs = dict()
 
 
 def _add_current_data(data_type, value):
@@ -311,7 +330,52 @@ def _add_current_data(data_type, value):
     elif data_type is BaseImg:
         base_imgs[id] = value
     elif data_type is CorrectedImg:
-        corrected_img[id] = value
+        corrected_imgs[id] = value
+
+def _current_data(data_type,id):
+    if id is None:
+        return None
+
+    if data_type is ExpectedText and id in expected_texts :
+        return expected_texts[id]
+    elif data_type is BaseImg and id in base_imgs:
+        return base_imgs[id]
+    elif data_type is CorrectedImg and id in corrected_imgs:
+        return corrected_imgs[id]
+
+
+class Result(Data):
+    tableName = "RESULT"
+
+    def __init__(self, corrected_img: CorrectedImg, accuracy: int, correct: bool, id=None):
+        super().__init__(id)
+        self.corrected_img = corrected_img
+        self.accuracy = accuracy
+        self.correct = correct
+
+    @staticmethod
+    def read(dict_parameter):
+        id = dict_parameter["_id"]
+        accuracy = dict_parameter["accuracy"]
+        correct = dict_parameter["correct"]
+
+        corrected_img_id = dict_parameter["image"]
+
+        if corrected_img_id in corrected_imgs:
+            image = corrected_imgs[corrected_img_id]
+        else:
+            db = _currently_open
+
+            db.add_filter(Filters.EqualFilter(corrected_img_id, "_id"))
+            image = db.read(CorrectedImg)[0]
+
+        return Result(image, accuracy, correct, id)
+
+    def get_element(self):
+        return (
+            ("_id", "image", "accuracy", "correct"),
+            (self.id, self.corrected_img, self.accuracy, self.correct)
+        )
 
 
 if __name__ == '__main__':
@@ -335,7 +399,8 @@ if __name__ == '__main__':
         waitKey(199)
         img = BaseImg(img=cam.get_image(), time=datetime.now(), expected_text=test)
         i.insert(img)
-        #     text = i.read(ExpectedText)
+
+        text = i.read(ExpectedText)
 
         print("\n img")
         cur.execute('select * FROM BASE_IMG;')
