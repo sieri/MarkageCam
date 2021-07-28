@@ -39,10 +39,10 @@ tables_schemas = {
     );""",
 
     "RESULT": """(_id INTEGER PRIMARY KEY,
-     img INTEGER NOT NULL,
+     image INTEGER NOT NULL,
      accuracy  INTEGER NOT NULL,
      correct BOOLEAN,
-     FOREIGN KEY (img)
+     FOREIGN KEY (image)
      REFERENCES CORRECTED_IMG (_id)
         ON DELETE CASCADE
         ON UPDATE NO ACTION
@@ -152,13 +152,12 @@ class DbConnector:
         cur = self.db.cursor()
 
         # override to read from memory instead of DB
-        if len(self.filters) == 1 and isinstance(self.filters[0], Filters.EqualFilter) and self.filters[0].label == "_id":
+        if len(self.filters) == 1 and isinstance(self.filters[0], Filters.EqualFilter) and self.filters[
+            0].label == "_id":
             val = _current_data(data_type, self.filters[0].value)
             if val is not None:
                 return [val]
         filters = self.generate_filter()
-
-
 
         sql = '''SELECT * FROM %s %s;''' % (data_type.tableName, filters)
         if debug:
@@ -318,6 +317,7 @@ class CorrectedImg(Data):
 expected_texts = dict()
 base_imgs = dict()
 corrected_imgs = dict()
+results = dict()
 
 
 def _add_current_data(data_type, value):
@@ -331,17 +331,22 @@ def _add_current_data(data_type, value):
         base_imgs[id] = value
     elif data_type is CorrectedImg:
         corrected_imgs[id] = value
+    elif data_type is Result:
+        results[id] = value
 
-def _current_data(data_type,id):
+
+def _current_data(data_type, id):
     if id is None:
         return None
 
-    if data_type is ExpectedText and id in expected_texts :
+    if data_type is ExpectedText and id in expected_texts:
         return expected_texts[id]
     elif data_type is BaseImg and id in base_imgs:
         return base_imgs[id]
     elif data_type is CorrectedImg and id in corrected_imgs:
         return corrected_imgs[id]
+    elif data_type is Result and id in results:
+        return results[id]
 
 
 class Result(Data):
@@ -374,7 +379,7 @@ class Result(Data):
     def get_element(self):
         return (
             ("_id", "image", "accuracy", "correct"),
-            (self.id, self.corrected_img, self.accuracy, self.correct)
+            (self.id, self.corrected_img.id, self.accuracy, self.correct)
         )
 
 

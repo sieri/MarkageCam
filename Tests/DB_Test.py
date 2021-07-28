@@ -67,11 +67,14 @@ class DB_load(unittest.TestCase):
         db.add_filter(EqualFilter(cor.id, "_id"))
         read_cor = db.read(DB.CorrectedImg)[0]
 
+        self.check_corrected(cor, read_cor)
+
+        return read_cor
+
+    def check_corrected(self, cor, read_cor):
         self.assertIsInstance(read_cor, DB.CorrectedImg)
         self.assertIsInstance(read_cor.base_img, DB.BaseImg)
-
         self.assertIsInstance(read_cor.base_img.expected_text, DB.ExpectedText)
-
         self.assertEqual(read_cor.id, cor.id)
         self.assertTrue((read_cor.img == cor.img).all())
         self.assertEqual(read_cor.base_img.id, cor.base_img.id)
@@ -79,8 +82,6 @@ class DB_load(unittest.TestCase):
         self.assertEqual(read_cor.base_img.expected_text.text, cor.base_img.expected_text.text)
         self.assertEqual(read_cor.base_img.expected_text.x_repeats, cor.base_img.expected_text.x_repeats)
         self.assertEqual(read_cor.base_img.expected_text.y_repeats, cor.base_img.expected_text.y_repeats)
-
-        return read_cor
 
     def testRead(self):
         # fill
@@ -104,6 +105,28 @@ class DB_load(unittest.TestCase):
             self.assertIsNot(read_cor, cor)
             self.assertIsNot(read_cor.base_img, img)
             self.assertIsNot(read_cor.base_img.expected_text, img.expected_text)
+
+    def testResult(self):
+        with DB.DbConnector(self.DB_NAME) as db:
+            ex, img, cor = self.fill(db)
+            res = DB.Result(corrected_img=cor, accuracy=12, correct=True)
+            db.insert(res)
+            self.assertIsNotNone(res.id)
+
+        with DB.DbConnector(self.DB_NAME) as db:
+            db.add_filter(EqualFilter(res.id, "_id"))
+            read_result = db.read(DB.Result)[0]
+            self.assertIsNotNone(read_result)
+            self.assertIs(read_result, res)
+
+
+        with DB.DbConnector(self.DB_NAME) as db:
+            read_result = db.read(res)[0]
+            self.assertIsNotNone(read_result)
+            self.assertEqual(read_result.id, res.id)
+            self.assertEqual(read_result.accuracy, res.accuracy)
+            self.assertEqual(read_result.correct, res.correct)
+            self.check_corrected(cor=cor, read_cor=read_result.corrected_img)
 
 
 if __name__ == '__main__':
