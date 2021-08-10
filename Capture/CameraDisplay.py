@@ -1,25 +1,21 @@
 # specific thread that allow for displaying a stream
+import queue
 import time
 from threading import Thread
+
 import cv2 as cv
 from PIL import Image, ImageTk
-from environement import display_fps
 
-class DisplayBase:
-    """
-        Base class for the display. runs in a separate thread
-        capture the image and store it in the parameter lastFrame
+from Capture.ImageGetter import ImageGetter
+from environement import display_fps, debug
 
-    """
 
-    def __init__(self, capture):
-
+class DisplayBase():
+    def __init__(self, getter : ImageGetter):
+        self._getter = getter
         self._thread = Thread(target=self.get, args=())
-        self._thread.setName("Camera capture for display")
-        self._capture = capture
-        self.lastFrame = None
-        self._stopped = False
-        self._capture.set(cv.CAP_PROP_BUFFERSIZE, 0)
+        self._thread.setName("Thread for display")
+
     def start(self):
         self._stopped = False
         self._thread.start()
@@ -27,27 +23,32 @@ class DisplayBase:
 
     def get(self):
         while not self._stopped:
-            grabbed, image = self._capture.read()
-            if grabbed:
-                self.show(image)
-                time.sleep(1/display_fps)
-            else:
-                self.stop()
+            try:
+                img = self._getter._queue.get(True, 10 / display_fps)
+                self.show(img)
+                print("show")
 
-    def show(self, image):
-        self.lastFrame = image
+            except queue.Empty:
+                if debug:
+                    print("queue empty")
+                if self._getter.stopped:
+                    self.stop()
+            time.sleep(1.0/display_fps)
+            print(1.0/display_fps)
 
     def stop(self):
         self._stopped = True
 
+    def show(self, image):
+        pass
 
 class DebugDisplay(DisplayBase):
     """
     Directly display the captured frame in an openCV window
     """
 
-    def __init__(self, win_name: str, capture):
-        super().__init__(capture)
+    def __init__(self, win_name: str, getter):
+        super().__init__(getter)
         self._win_name = win_name
 
     def show(self, image):
@@ -59,9 +60,10 @@ class TkDisplay(DisplayBase):
     Format the lastFrame for display with tkinter
     """
 
-    def __init__(self, capture, scale):
-        super().__init__(capture)
+    def __init__(self, getter, scale):
+        super().__init__(getter)
         self.scale = scale
+        self.lastFrame = None # image to save in memory
 
     def show(self, image):
         try:

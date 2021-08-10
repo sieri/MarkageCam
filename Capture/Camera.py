@@ -45,17 +45,16 @@ class Cam(CameraBase):
         else:
             self._camera = cv.VideoCapture(access)
 
+        self._activate_capture()
         return self._camera.isOpened()
 
 
     def get_image(self):
         """get the image with camera correction"""
-        retval, img = self._camera.read()
+        img = self._getter.read()
 
         corrected_img = cv.warpPerspective(img,  self.config['h'], (self.config['width'], self.config['height']), borderMode=cv.BORDER_CONSTANT)
-        if retval and img is not None:
-            return img, corrected_img
-        else:
-            pass  # todo: decide what to do in case of capture fail
+
+        return img, corrected_img
 
 

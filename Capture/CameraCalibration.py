@@ -65,6 +65,7 @@ class CamCalib(CameraBase):
         self._camera.set(cv.CAP_PROP_AUTOFOCUS, 0)
         self._update_focus()
 
+        self._activate_capture()
         return self._camera.isOpened()
 
     def calibrate_fish_eye_distortion(self, repeats=1, size=(9, 6)):
