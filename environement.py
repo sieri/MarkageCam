@@ -8,6 +8,9 @@ save_to_db = True  # if true the images are saved to the database and local file
 image_path = "./img/"  # path from current folder where images are stored
 
 pulling_time_syncro = 0.100  # time between read of the synchronisation value
+display_fps = 24 # number of framed pulled per second
+
+
 
 # set the correct opc server in test
 if not test_setup:

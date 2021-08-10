@@ -76,6 +76,8 @@ class CalibApp(CameraApp):
             command=self._cam.focus_sub
         )
 
+        self.ent_camera_ip.insert(0,"rtsp://")
+
         self.btn_focus_confirm = tk.Button(
             self.focus_frame,
             text='Confirm calibration',

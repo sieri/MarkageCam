@@ -51,11 +51,15 @@ class CamCalib(CameraBase):
         if self._camera is not None and self._camera.isOpened():
             self.close_camera()
 
+        self._access = "rtsp://192.168.100.154:5554/camera"
+
         if system() == "Windows":
             # windows specific fix for a warning on opencv camera close
             self._camera = cv.VideoCapture(self._access, cv.CAP_DSHOW)
+            self._camera.open(self._access)
         else:
             self._camera = cv.VideoCapture(self._access)
+            self._camera.open(self._access)
 
         # setup the focus
         self._camera.set(cv.CAP_PROP_AUTOFOCUS, 0)

@@ -1,8 +1,9 @@
 # specific thread that allow for displaying a stream
+import time
 from threading import Thread
 import cv2 as cv
 from PIL import Image, ImageTk
-
+from environement import display_fps
 
 class DisplayBase:
     """
@@ -18,7 +19,7 @@ class DisplayBase:
         self._capture = capture
         self.lastFrame = None
         self._stopped = False
-
+        self._capture.set(cv.CAP_PROP_BUFFERSIZE, 0)
     def start(self):
         self._stopped = False
         self._thread.start()
@@ -29,7 +30,7 @@ class DisplayBase:
             grabbed, image = self._capture.read()
             if grabbed:
                 self.show(image)
-                cv.waitKey(1)
+                time.sleep(1/display_fps)
             else:
                 self.stop()
 
