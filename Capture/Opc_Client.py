@@ -1,6 +1,7 @@
 # used library only work with 32 bits interpreters raise error if not the case
 import struct
 
+
 n_bit = struct.calcsize("P") * 8
 if n_bit == 64:
     raise NotImplementedError
@@ -82,30 +83,4 @@ class OpcClient:
         self.opc.close()
 
 
-if __name__ == '__main__':
-    print("Trying to connect to server " + default_opc_server)
-    print("\n ====================================\n")
-    try:
-        def callback():
-            print("Taking picture now")
 
-
-        if test_setup:
-            address_text = "." + address_text
-            address_trigger = "." + address_trigger
-            with OpcClient('Matrikon.OPC.Simulation') as opc:
-                opc.opc[address_text] = 'test'
-
-        set_synchro(callback)
-
-        for i in range(60):
-            time.sleep(1)
-            string = get_text()
-            print('Reading the text', string)
-
-        kill_synchro()
-        print("end test")
-    except OpenOPC.OPCError as e:
-        print('Error', e)
-
-    input('press enter key to exit..')

@@ -7,6 +7,7 @@ test_setup = True  # if true indicates we are in a test setup and call the simul
 save_to_db = True  # if true the images are saved to the database and local file system, if false they aren't
 image_path = "./img/"  # path from current folder where images are stored
 
+
 pulling_time_syncro = 0.100  # time between read of the synchronisation value
 display_fps = 24 # number of framed pulled per second
 
