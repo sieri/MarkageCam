@@ -1,6 +1,8 @@
-import json
+import environement
+
+environement.debug = False
+
 import os
-import time
 import unittest
 from datetime import datetime
 
@@ -8,8 +10,6 @@ import numpy as np
 
 from Data import DB
 from Data.Filters import EqualFilter
-from ImgTreatement import DebugDisplay
-import cv2 as cv
 
 
 class DB_load(unittest.TestCase):
@@ -22,10 +22,12 @@ class DB_load(unittest.TestCase):
         os.remove(self.DB_NAME)
 
     def test_open_db(self):
+        print("try to open the database")
         with DB.DbConnector(self.DB_NAME) as db:
             self.assertTrue(os.path.exists(self.DB_NAME), "DB didn't create the file")
 
     def test_schema(self):
+        print("read the schema of the database and check it has is the one set by the program")
         with DB.DbConnector(self.DB_NAME) as db:
             cur = db.db.cursor()
             for name in DB.tables_names:
@@ -34,6 +36,7 @@ class DB_load(unittest.TestCase):
                 self.assertIn(DB.tables_schemas[name].replace('\n', '\\n').replace(";", ""), str(test[0]))
 
     def test_insert(self):
+        print("try to fill the db with sample data")
         with DB.DbConnector(self.DB_NAME) as db:
             self.fill(db)
 
@@ -84,18 +87,20 @@ class DB_load(unittest.TestCase):
         self.assertEqual(read_cor.base_img.expected_text.y_repeats, cor.base_img.expected_text.y_repeats)
 
     def testRead(self):
-        # fill
+        print("Try rereading the data")
+
+        print("fill the db")
         with DB.DbConnector(self.DB_NAME) as db:
             ex, img, cor = self.fill(db)
 
-        # close db, then read it again
+        print("close db, then read it again, data should be from the buffer")
         with DB.DbConnector(self.DB_NAME) as db:
             read_cor = self.check_read(db, cor)
             self.assertIs(read_cor, cor)
             self.assertIs(read_cor.base_img, img)
             self.assertIs(read_cor.base_img.expected_text, img.expected_text)
 
-        # close the db, clear current data to simulate a reboot
+        print("close again, empty the buffer and read from the database")
         DB.expected_texts.clear()
         DB.base_imgs.clear()
         DB.corrected_imgs.clear()
@@ -107,6 +112,7 @@ class DB_load(unittest.TestCase):
             self.assertIsNot(read_cor.base_img.expected_text, img.expected_text)
 
     def testResult(self):
+        print("test read and write of the result table")
         with DB.DbConnector(self.DB_NAME) as db:
             ex, img, cor = self.fill(db)
             res = DB.Result(corrected_img=cor, accuracy=12, correct=True)
@@ -118,7 +124,6 @@ class DB_load(unittest.TestCase):
             read_result = db.read(DB.Result)[0]
             self.assertIsNotNone(read_result)
             self.assertIs(read_result, res)
-
 
         with DB.DbConnector(self.DB_NAME) as db:
             read_result = db.read(res)[0]
