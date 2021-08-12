@@ -51,7 +51,7 @@ class CamCalib(CameraBase):
         if self._camera is not None and self._camera.isOpened():
             self.close_camera()
 
-        self._access = "rtsp://192.168.100.154:5554/camera"
+        # self._access = "rtsp://192.168.100.154:5554/camera"
 
         if system() == "Windows":
             # windows specific fix for a warning on opencv camera close
@@ -208,6 +208,7 @@ class CamCalib(CameraBase):
                             'h': self._h.tolist(),
                             'width': self._width,
                             'height': self._height,
+                            'delay': 0,
                         },
                         indent=4
                     )

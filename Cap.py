@@ -11,15 +11,22 @@ import tkinter as tk
 from enum import Enum, auto
 from tkinter import filedialog
 from Data import DB
-from environement import test_setup, save_to_db
+from environement import test_setup, save_to_db, use_simulator
 
-try:
-    from Capture import Opc_Client as Opc
-except NotImplementedError: # OPC client only function in a 32 bit environment
-    if test_setup:
-        from Tests import OPC_Simulator as Opc # simulator of the automate connection same interface
-    else:
-        raise Exception("Need 32 bit interpeter")
+if use_simulator:
+    from Tests import OPC_Simulator as Opc  # simulator of the automate connection same interface
+else:
+    try:
+        from Capture import Opc_Client as Opc
+    except (NotImplementedError, OpenOPC.OPCError, pywintypes.com_error) as e: # OPC client only function in a 32 bit environment
+        print(e)
+        if test_setup:
+            print("Need 32 bit interpreter, using simulator")
+            from Tests import OPC_Simulator as Opc # simulator of the automate connection same interface
+        else:
+            raise Exception("Need 32 bit interpeter")
+
+
 
 
 class States(Enum):

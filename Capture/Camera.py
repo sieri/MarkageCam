@@ -1,5 +1,7 @@
 # Access to the camera and optical correction
 import json
+import time
+
 import cv2 as cv
 from platform import system
 
@@ -51,6 +53,7 @@ class Cam(CameraBase):
 
     def get_image(self):
         """get the image with camera correction"""
+        time.sleep(self.config['delay'])
         img = self._getter.read()
 
         corrected_img = cv.warpPerspective(img,  self.config['h'], (self.config['width'], self.config['height']), borderMode=cv.BORDER_CONSTANT)
