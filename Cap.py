@@ -179,8 +179,8 @@ class CaptureApp(CameraApp):
         :return:
         """
         text = Opc.get_text()
-        x = int(self.ent_x_repeats.get())
-        y = int(self.ent_y_repeats.get())
+        (x,y) = Opc.get_repetions()
+
         print(text)
         if self.expected_text is None or not (text == self.expected_text.text and
                 x == self.expected_text.x_repeats and
@@ -192,6 +192,16 @@ class CaptureApp(CameraApp):
             self.ent_expected_text.delete(0, tk.END)
             self.ent_expected_text.insert(0, text)
             self.ent_expected_text.configure(state='readonly')
+
+            self.ent_x_repeats.configure(state='normal')
+            self.ent_x_repeats.delete(0, tk.END)
+            self.ent_x_repeats.insert(0, str(x))
+            self.ent_x_repeats.configure(state='readonly')
+
+            self.ent_y_repeats.configure(state='normal')
+            self.ent_y_repeats.delete(0, tk.END)
+            self.ent_y_repeats.insert(0, str(y))
+            self.ent_y_repeats.configure(state='readonly')
 
 
     def capture_image(self, _event=None):

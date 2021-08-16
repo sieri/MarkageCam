@@ -23,6 +23,8 @@ def set_synchro(callback, server_name=default_opc_server):
         synchro.start()
         subprocess.Popen('python ./tests/AutomateSimulator.py')
 
+def get_repetions(server_name=default_opc_server):
+    return (1,5)
 
 def kill_synchro():
     global synchro
@@ -31,7 +33,6 @@ def kill_synchro():
 
 
 class TCP_server:
-
     def __init__(self, callback, host='127.0.0.1', port=65433):
         self.socket = None
         self.host = host

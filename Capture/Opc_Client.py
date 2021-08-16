@@ -24,8 +24,6 @@ address_trigger = 'M_Trigger_Camera'
 
 def get_text(server_name=default_opc_server):
     with OpcClient(server_name) as opc:
-        #print(type(opc.opc[address_x_repeats]))
-        #print(opc.opc['R_EBS_Nbr_Ligne'])
         return opc.opc[address_text]
 
 
