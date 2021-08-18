@@ -15,7 +15,9 @@ def process(img: DB.CorrectedImg):
     :returns: Boolean if correct, list of index of error, coordinate of errors
     """
 
-    preprocess(img.img)
+    return preprocess(img.img)
+
+
 
 
 

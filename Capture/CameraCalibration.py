@@ -1,6 +1,7 @@
 import inspect
 import json
 import os
+import time
 
 import cv2
 import cv2 as cv
@@ -105,11 +106,7 @@ class CamCalib(CameraBase):
 
         return rms, camera_matrix, dist_coefs, rvecs, tvecs
 
-    def find_homography(self, size=(9, 6)):
-        grabbed, img = self._camera.read()
-
-        if not grabbed:
-            raise Exception("Camera not read")
+    def find_homography(self, img=None, size=(9, 6)):
 
         grayscale = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
         # TODO: get the numbers from a cleaner source
@@ -119,7 +116,19 @@ class CamCalib(CameraBase):
         pt_cam = self.get_chessboard(grayscale, size)
         pt_pattern = self.get_chessboard(pattern, size)
 
+        matches = [(pt_cam[index], pt) for index, pt in enumerate(pt_pattern)]
+        print(matches)
+        print(pt_cam[1])
+
         h, _mask = cv.findHomography(pt_cam, pt_pattern, cv2.RHO)
+
+        with open("MatrixBase.txt", 'w') as f:
+            f.write(str(h))
+
+        im1Reg = cv.warpPerspective(img, h, (pattern.shape[1], pattern.shape[0]), borderMode=cv.BORDER_CONSTANT)
+
+        show_resized("warrped_base", im1Reg)
+        cv.imwrite("warpped_base.png", im1Reg)
 
         # get the size of the base image
         height, width = grayscale.shape
@@ -139,7 +148,12 @@ class CamCalib(CameraBase):
              [0, 1, -by],
              [0, 0, 1]]
 
+        with open("MatrixTrans.txt", 'w') as f:
+            f.write(str(A))
         final = np.matmul(A, h)  # multiply the matrix to add the translation in the perspective shift
+
+        with open("Final.txt", 'w') as f:
+            f.write(str(final))
 
         return final, bwidth, bheight
 
@@ -162,8 +176,7 @@ class CamCalib(CameraBase):
         objp[:, :2] = np.mgrid[0:size[0], 0:size[1]].T.reshape(-1, 2)
 
         # grab a frame
-        cv.waitKey(25)
-        grabbed, img = self._camera.read()
+        img = self._getter.read()
 
         # cv.imwrite("CameraCalibSetup.png", img) # TODO: remove report code
         grayscale = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
@@ -239,10 +252,6 @@ class CamCalib(CameraBase):
 if __name__ == '__main__':
     calib = CamCalib()
     calib.set_access('1')
-    calib.activate_camera()
-    calib.show_camera()
-    calib._camera.set(cv.CAP_PROP_AUTOFOCUS, 1)
-    cv.waitKey(1000)
 
     distort = False
 
@@ -270,14 +279,13 @@ if __name__ == '__main__':
                 print("coord" + str((x, y)))
 
 
-        g, img = calib._camera.read()
-        cv.setMouseCallback('Camera', get_coord)
+        img = cv.imread("base.jpg")
 
-        h, width, height = calib.find_homography()
+        h, width, height = calib.find_homography(img)
         print("h" + str(h))
 
         im1Reg = cv.warpPerspective(img, h, (width, height), borderMode=cv.BORDER_CONSTANT)
 
         show_resized("img1 reg", im1Reg)
-
+        cv.imwrite("wrapped.png", im1Reg)
     cv.waitKey(0)

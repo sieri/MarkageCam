@@ -29,8 +29,6 @@ class DisplayBase():
 
 
             except queue.Empty:
-                if debug:
-                    print("queue empty")
                 if self._getter.stopped:
                     self.stop()
             time.sleep(1.0/display_fps)
@@ -53,6 +51,7 @@ class DebugDisplay(DisplayBase):
 
     def show(self, image):
         cv.imshow(self._win_name, image)
+        cv.waitKey(1)
 
 
 class TkDisplay(DisplayBase):
