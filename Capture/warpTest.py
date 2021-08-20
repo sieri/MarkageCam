@@ -8,7 +8,7 @@ def warp(h, img, name):
     text = str(h).replace('[', ' ').replace(']', ' ')
     font = cv.FONT_HERSHEY_PLAIN
     size = 1
-    color = (255, 0, 0)
+    color = (255, 0, 255)
     y0, dy = 30, 15
     for i, line in enumerate(text.split('\n')):
         y = y0 + i * dy
@@ -143,6 +143,17 @@ if __name__ == '__main__':
         base,
         "M32eq0_001"
     )
+
+    warp(
+        np.array([
+            [1, 1, 0],
+            [1, 1, 0],
+            [0, 0.001, 1]],
+            float),
+        base,
+        "rot"
+    )
+
 
     warp(
         np.matmul(np.array([

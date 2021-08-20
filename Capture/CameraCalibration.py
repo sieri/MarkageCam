@@ -148,6 +148,9 @@ class CamCalib(CameraBase):
              [0, 1, -by],
              [0, 0, 1]]
 
+        with open("MatrixA.txt", 'w') as f:
+            f.write(str(A))
+
         with open("MatrixTrans.txt", 'w') as f:
             f.write(str(A))
         final = np.matmul(A, h)  # multiply the matrix to add the translation in the perspective shift
