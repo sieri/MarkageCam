@@ -43,7 +43,7 @@ class CameraTestCaseWebCam(unittest.TestCase):
     def load_camera(self):
         c = Cam('testConf.json')
         self.assertIsNotNone(c, "Camera couldn't load config")
-        self.assertEqual(c.config['cameraAccess'], 0)
+        self.assertEqual(c._config['cameraAccess'], 0)
         return c
 
     def test_cam_load(self):

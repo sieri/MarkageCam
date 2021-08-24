@@ -32,7 +32,7 @@ def get_text(server_name=default_opc_server):
 def set_synchro(callback, server_name=default_opc_server):
     global synchro
     if synchro is not None:
-        synchro.callback = callback
+        synchro._callback = callback
     else:
         synchro = Synchro(callback, server_name)
         synchro.start()
@@ -49,28 +49,33 @@ def kill_synchro():
 
 
 class Synchro:
-    def __init__(self, callback, server_name):
-        self.callback = callback
-        self.running = False
-        self.server_name = server_name
-        self.thread = Thread(target=self.run, args=())
-        self.thread.setName("synchro thread for capture")
+    _callback : function
+    _running : bool
+    _server_name : str
+    _thread : Thread
+
+    def __init__(self, callback:function, server_name: str):
+        self._callback = callback
+        self._running = False
+        self._server_name = server_name
+        self._thread = Thread(target=self.run, args=())
+        self._thread.setName("synchro thread for capture")
 
     def start(self):
-        self.running = True
-        self.thread.start()
+        self._running = True
+        self._thread.start()
         return self
 
     def stop(self):
-        self.running = False
+        self._running = False
 
     def run(self):
         trigger = False
-        with OpcClient(self.server_name) as opc:
-            while self.running:
+        with OpcClient(self._server_name) as opc:
+            while self._running:
                 if opc.opc[address_trigger]:
                     if not trigger:
-                        self.callback()
+                        self._callback()
                         trigger = True
                         print(opc.opc[address_text])
                 elif trigger:

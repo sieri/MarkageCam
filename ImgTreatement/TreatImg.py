@@ -29,6 +29,11 @@ def mask(img):
     return img
 
 def preprocess(img):
+    estart, eend = None, None
+
+
+    if debug:
+        estart = cv.getTickCount()
     # convert to grayscale image
     i = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
 
@@ -48,7 +53,12 @@ def preprocess(img):
     #invert
     i = cv.bitwise_not(i)
 
+
     if debug:
+        eend = cv.getTickCount()
+
+        time = (e2 - e1) / cv.getTickFrequency()
+        print ("ended in", time)
         DebugDisplay.show_resized("preprocessed", i)
 
     return i

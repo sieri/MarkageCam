@@ -30,6 +30,9 @@ class States(Enum):
 
 
 class CaptureApp(CameraApp):
+    config_filename : str
+    expected_text : DB.ExpectedText
+    on_capture_callback : list
     """
     Application needing to be run to capture the camera stream
     """
@@ -82,7 +85,7 @@ class CaptureApp(CameraApp):
         self._root.bind('c', self.capture_image)
 
         # state machine
-        self.state = None
+        self.__state = None
         self.transitions = {
             States.INITIAL: self.on_entry_initial,
             States.ENTER_FILE: self.on_entry_enter_file,
@@ -104,10 +107,10 @@ class CaptureApp(CameraApp):
         :param new_state: The new state to enter
         :return:
         """
-        if self.state != new_state:
-            self.state = new_state
+        if self.__state != new_state:
+            self.__state = new_state
             # call the new state's entry method
-            self.transitions[self.state]()
+            self.transitions[self.__state]()
 
     def on_entry_initial(self):
         """
