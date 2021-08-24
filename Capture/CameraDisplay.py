@@ -27,14 +27,10 @@ class DisplayBase():
                 img = self._getter._queue.get(True, 10 / display_fps)
                 self.show(img)
 
-
             except queue.Empty:
-                if debug:
-                    print("queue empty")
                 if self._getter.stopped:
                     self.stop()
             time.sleep(1.0/display_fps)
-
 
     def stop(self):
         self._stopped = True

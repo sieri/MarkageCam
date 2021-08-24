@@ -22,19 +22,19 @@ class Cam(CameraBase):
         super().__init__()
         try:
             with open(config_file) as fp:
-                self.config = json.load(fp)
-                self.config['h'] = np.array(self.config['h'])
+                self._config = json.load(fp)
+                self._config['h'] = np.array(self._config['h'])
 
         except (IOError, FileNotFoundError):
             print("Unable to load camera config file. Run Calibration")
-            self.config = None
+            self._config = None
 
     def activate_camera(self):
 
-        if self.config is None:
+        if self._config is None:
             return False
 
-        access = self.config['cameraAccess']
+        access = self._config['cameraAccess']
 
         # cast if needed, in the case of a webcam
         if access is str:
@@ -56,7 +56,7 @@ class Cam(CameraBase):
         time.sleep(self.config['delay'])
         img = self._getter.read()
 
-        corrected_img = cv.warpPerspective(img,  self.config['h'], (self.config['width'], self.config['height']), borderMode=cv.BORDER_CONSTANT)
+        corrected_img = cv.warpPerspective(img, self._config['h'], (self._config['width'], self._config['height']), borderMode=cv.BORDER_CONSTANT)
 
         return img, corrected_img
 
