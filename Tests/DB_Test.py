@@ -133,6 +133,11 @@ class DB_load(unittest.TestCase):
             self.assertEqual(read_result.correct, res.correct)
             self.check_corrected(cor=cor, read_cor=read_result.corrected_img)
 
+    def testReadEmpty(self):
+        print("test that reading an empty database return a empty list")
+        with DB.DbConnector(self.DB_NAME) as db:
+            res = db.read(DB.CorrectedImg)
+            self.assertEqual(len(res), 0)
 
 if __name__ == '__main__':
     unittest.main()

@@ -53,7 +53,7 @@ class Cam(CameraBase):
 
     def get_image(self):
         """get the image with camera correction"""
-        time.sleep(self.config['delay'])
+        time.sleep(self._config['delay'])
         img = self._getter.read()
 
         corrected_img = cv.warpPerspective(img, self._config['h'], (self._config['width'], self._config['height']), borderMode=cv.BORDER_CONSTANT)

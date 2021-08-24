@@ -3,7 +3,7 @@ import time
 
 import environement
 
-environement.debug = False
+environement.debug = True
 
 from Data import DB, Filters
 

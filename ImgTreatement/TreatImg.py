@@ -8,6 +8,7 @@ import cv2 as cv
 plotting = False
 
 
+
 def process(img: DB.CorrectedImg):
     """
     Process an image.
@@ -29,36 +30,51 @@ def mask(img):
     return img
 
 def preprocess(img):
-    estart, eend = None, None
+
+    e_list = list()
+    e_list.append(cv.getTickCount())
 
 
-    if debug:
-        estart = cv.getTickCount()
     # convert to grayscale image
-    i = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
+    i = cv.cvtColor(img, cv.COLOR_BGR2GRAY, dstCn=0)
+    e_list.append(cv.getTickCount())
 
     # denoise
-    i = cv.fastNlMeansDenoising(i)
+    # i = cv.fastNlMeansDenoising(i) #mesured as bottleneck 27s for execution
+    # e_list.append(cv.getTickCount())
 
     # mask
     i = mask(i)
+    e_list.append(cv.getTickCount())
 
     #detect edges
     i = cv.Canny(i, 50, 150, L2gradient=True)
+    e_list.append(cv.getTickCount())
 
     #dilate
     kernel = np.ones((5, 5), np.uint8)
     i = cv.dilate(i, kernel, iterations=3)
+    e_list.append(cv.getTickCount())
 
     #invert
     i = cv.bitwise_not(i)
+    e_list.append(cv.getTickCount())
 
 
     if debug:
-        eend = cv.getTickCount()
-
-        time = (e2 - e1) / cv.getTickFrequency()
-        print ("ended in", time)
         DebugDisplay.show_resized("preprocessed", i)
+        print("\n==TIMING PREPROCESSING")
+        for i in range(len(e_list)-1):
+            time = (e_list[i+1] - e_list[i]) / cv.getTickFrequency()
+            print("step,", i, "in", time, 's')
+        print("total:" , (e_list[-1] - e_list[0]) / cv.getTickFrequency(), "s")
+
+
 
     return i
+
+def script_detect(img, preprocessed):
+    """
+        Detect and split image with area of texts isolated
+        :returns list of image segment, shape of the grid
+    """
