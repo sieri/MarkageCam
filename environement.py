@@ -9,7 +9,7 @@ image_path = "./img/"  # path from current folder where images are stored
 use_simulator = True  # if true will use the simulator for the capture synchronisation
 
 pulling_time_syncro = 0.100  # time between read of the synchronisation value
-display_fps = 24  # number of framed pulled per second
+display_fps = 5  # number of framed pulled per second
 
 
 # set the correct opc server in test

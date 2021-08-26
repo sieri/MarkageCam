@@ -11,7 +11,7 @@ from environement import display_fps, debug
 
 
 class DisplayBase():
-    def __init__(self, getter : ImageGetter):
+    def __init__(self, getter: ImageGetter):
         self._getter = getter
         self._thread = Thread(target=self.get, args=())
         self._thread.setName("Thread for display")
@@ -30,13 +30,14 @@ class DisplayBase():
             except queue.Empty:
                 if self._getter.stopped:
                     self.stop()
-            time.sleep(1.0/display_fps)
+            time.sleep(1.0 / display_fps)
 
     def stop(self):
         self._stopped = True
 
     def show(self, image):
         pass
+
 
 class DebugDisplay(DisplayBase):
     """
@@ -59,7 +60,7 @@ class TkDisplay(DisplayBase):
     def __init__(self, getter, scale):
         super().__init__(getter)
         self.scale = scale
-        self.lastFrame = None # image to save in memory
+        self.lastFrame = None  # image to save in memory
 
     def show(self, image):
         try:
