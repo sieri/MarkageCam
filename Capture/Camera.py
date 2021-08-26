@@ -44,8 +44,14 @@ class Cam(CameraBase):
         if system() == "Windows":
             # windows specific fix for a warning on opencv camera close
             self._camera = cv.VideoCapture(access, cv.CAP_DSHOW)
+            self._camera.open(access)
         else:
             self._camera = cv.VideoCapture(access)
+            self._camera.open(access)
+
+        # setup the focus
+        self._camera.set(cv.CAP_PROP_AUTOFOCUS, 0)
+        self._camera.set(cv.CAP_PROP_FOCUS, self._config['focus'])
 
         self._activate_capture()
         return self._camera.isOpened()
