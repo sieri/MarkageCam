@@ -159,7 +159,7 @@ class CaptureApp(CameraApp):
         if self._cam.activate_camera():
             self.change_state(States.CAMERA_OPEN)
         else:
-            self.change_state(States.ENTER_FILE)
+           self.change_state(States.ENTER_FILE)
 
     def on_entry_camera_open(self):
         """
