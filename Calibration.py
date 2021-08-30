@@ -195,9 +195,8 @@ class CalibApp(CameraApp):
 
     def on_save_config_entry(self):
 
-        self._cam.calibrate()
         try:
-            pass
+            self._cam.calibrate()
         except Exception as e:
             messagebox.showerror("Error", e)
             self.change_state(States.CAMERA_CONFIRMED)

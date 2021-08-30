@@ -1,6 +1,7 @@
 import inspect
 import json
 import os
+import time
 
 import cv2
 import cv2 as cv
@@ -88,6 +89,7 @@ class CamCalib(CameraBase):
                 i, o = self._process_chessboard(size=size)
                 img_points.extend(i)
                 obj_points.extend(o)
+                time.sleep(5)
             except Exception as e:
                 dummy -= 1
                 print(e)
@@ -106,7 +108,7 @@ class CamCalib(CameraBase):
         return rms, camera_matrix, dist_coefs, rvecs, tvecs
 
     def find_homography(self, size=(9, 6)):
-        grabbed, img = self._camera.read()
+        grabbed, img = self._getter.read()
 
         if not grabbed:
             raise Exception("Camera not read")
@@ -163,13 +165,10 @@ class CamCalib(CameraBase):
 
         # grab a frame
         cv.waitKey(25)
-        grabbed, img = self._camera.read()
+        img = self._getter.read()
 
         # cv.imwrite("CameraCalibSetup.png", img) # TODO: remove report code
         grayscale = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
-
-        if not grabbed:
-            raise Exception("Camera not read")
 
         corners = self.get_chessboard(grayscale, size)
 
@@ -179,7 +178,7 @@ class CamCalib(CameraBase):
 
         # the points could be repeated a couple of time for better accuracy
         if debug:
-            cv.drawChessboardCorners(image=img, patternSize=size, corners=corners, patternWasFound=found_pattern)
+            cv.drawChessboardCorners(image=img, patternSize=size, corners=corners, patternWasFound=True)
             cv.imshow("test", img)
 
             # cv.imwrite("CameraCalibExample.png", img)  # TODO: remove report code
@@ -238,22 +237,23 @@ class CamCalib(CameraBase):
 # temp test code
 if __name__ == '__main__':
     calib = CamCalib()
-    calib.set_access('1')
+    calib.set_access('rtsp://admin:password@192.168.100.146:554//h264Preview_01_sub')
     calib.activate_camera()
     calib.show_camera()
     calib._camera.set(cv.CAP_PROP_AUTOFOCUS, 1)
-    cv.waitKey(1000)
+    cv.waitKey(5000)
 
-    distort = False
+    distort = True
 
-    homo = True
+    homo = False
 
     if distort:
-        rms, camera_matrix, dist_coefs, rvecs, tvecs = calib.calibrate_fish_eye_distortion(repeats=10)
+        img = calib._getter.read()
 
-        grabbed, img = calib._camera.read()
+        rms, camera_matrix, dist_coefs, rvecs, tvecs = calib.calibrate_fish_eye_distortion(repeats=100)
 
         h, w = img.shape[:2]
+        print("distort")
         newcameramtx, roi = cv.getOptimalNewCameraMatrix(camera_matrix, dist_coefs, (w, h), 1, (w, h))
 
         dst = cv.undistort(img, camera_matrix, dist_coefs, None, newcameramtx)
@@ -264,6 +264,34 @@ if __name__ == '__main__':
 
         cv.imshow("undistorted", dst)
 
+        with open('cameraMatrice.json', 'w') as fp:
+            try:
+                fp.write(
+                    json.dumps(
+                        {
+                            'dist_coef' : dist_coefs.tolist(),
+                            'cameraMtx' : camera_matrix.tolist(),
+                            'NewCameraMtx': newcameramtx.tolist(),
+                            'roi' : roi,
+                        },
+                        indent=4
+                    )
+                )
+
+            except IOError:
+                pass
+
+        while True:
+            try:
+                cv.waitKey(100)
+                img = calib._getter.read()
+                dst = cv.undistort(img, camera_matrix, dist_coefs, None, newcameramtx)
+                cv.imshow("test", dst)
+                corners = CamCalib.get_chessboard(cv.cvtColor(dst, cv.COLOR_BGR2GRAY))
+                cv.drawChessboardCorners(image=img, patternSize=(9,6), corners=corners, patternWasFound=True)
+                cv.imshow("test", img)
+            except Exception as e:
+                print(e)
     if homo:
         def get_coord(event, x, y, flag, param):
             if event == cv.EVENT_LBUTTONDOWN:

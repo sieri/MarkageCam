@@ -1,3 +1,4 @@
+import cv2 as cv
 import tkinter
 from Capture.CameraDisplay import TkDisplay, DebugDisplay
 from Capture.ImageGetter import ImageGetter
@@ -8,6 +9,8 @@ class CameraBase:
         self._camera = None  # a video capture stream
         self._getter = None # a thread getting the data
         self._display = None # a display
+
+
 
     def activate_camera(self):
         """
@@ -54,7 +57,7 @@ class CameraBase:
 
         if self._camera is not None:
             self._getter.stop()
-            self._camera.release()
+
 
     def get_display_frame(self) -> tkinter.PhotoImage:
         """

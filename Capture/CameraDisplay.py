@@ -24,15 +24,16 @@ class DisplayBase():
     def get(self):
         while not self._stopped:
             try:
-                img = self._getter._queue.get(True, 10 / display_fps)
+                img = self._getter.read()
                 self.show(img)
 
             except queue.Empty:
                 if self._getter.stopped:
                     self.stop()
-            time.sleep(1.0 / display_fps)
+            cv.waitKey(int(1000.0 / display_fps))
 
     def stop(self):
+        print("stop")
         self._stopped = True
 
     def show(self, image):
@@ -50,6 +51,7 @@ class DebugDisplay(DisplayBase):
 
     def show(self, image):
         cv.imshow(self._win_name, image)
+        print("refresh")
 
 
 class TkDisplay(DisplayBase):

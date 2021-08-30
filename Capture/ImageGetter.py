@@ -36,6 +36,8 @@ class ImageGetter:
             else:
                 self.stop()
 
+        self._capture.release()
+
     def read(self):
         return self._queue.get()
 
