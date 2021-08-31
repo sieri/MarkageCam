@@ -111,27 +111,35 @@ class CamCalib(CameraBase):
 
         print(np.array(obj_points, dtype=np.float32))
 
-        obj_points = np.reshape(obj_points, (N_imm, 1, size[0] * size[1], 3))
         # calculate camera distortion
-        rms, _, _, _, _ = cv.fisheye.calibrate(
-            obj_points,
-            img_points,
-            (w, h),
-            K,
-            D,
-            rvecs,
-            tvecs,
-            calibration_flags,
-            (cv.TERM_CRITERIA_EPS + cv.TERM_CRITERIA_MAX_ITER, 30, 1e-6)
-        )
 
-        return rms, K, D
+        while True:
+            objpoints = np.reshape(obj_points, (N_imm, 1, size[0] * size[1], 3))
+            try:
+                rms, _, _, _, _ = cv.fisheye.calibrate(
+                    objpoints,
+                    img_points,
+                    (w, h),
+                    K,
+                    D,
+                    rvecs,
+                    tvecs,
+                    calibration_flags,
+                    (cv.TERM_CRITERIA_EPS + cv.TERM_CRITERIA_MAX_ITER, 30, 1e-6)
+                )
+                return rms, K, D
+            except cv.error as err:
+                try:
+                    idx = int(err.msg.split('array ')[1][0])  # Parse index of invalid image from error message
+                    obj_points.pop(idx)
+                    img_points.pop(idx)
+                    N_imm -= 1
+                    print("Removed ill-conditioned image {} from the data.  Trying again...".format(idx))
+                except IndexError:
+                    raise err
 
     def find_homography(self, size=(9, 6)):
-        grabbed, img = self._getter.read()
-
-        if not grabbed:
-            raise Exception("Camera not read")
+        img = self._getter.read()
 
         grayscale = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
         # TODO: get the numbers from a cleaner source
@@ -269,7 +277,7 @@ if __name__ == '__main__':
     if distort:
         img = calib._getter.read()
 
-        rms, K, D = calib.calibrate_fish_eye_distortion(repeats=10)
+        rms, K, D = calib.calibrate_fish_eye_distortion(repeats=100)
 
         h, w = img.shape[:2]
         print("distort")
@@ -280,13 +288,15 @@ if __name__ == '__main__':
 
         cv.imshow("undistorted", dst)
 
-        with open('cameraMatrice.json', 'w') as fp:
+        with open('../cameraMatrice.json', 'w') as fp:
             try:
                 fp.write(
                     json.dumps(
                         {
-                            'map1': map1.tolist(),
-                            'map2': map2.tolist(),
+                            'K': K.tolist(),
+                            'D': D.tolist(),
+                            'h': h,
+                            'w': w
                         },
                         indent=4
                     )

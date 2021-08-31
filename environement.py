@@ -11,6 +11,8 @@ use_simulator = True  # if true will use the simulator for the capture synchroni
 pulling_time_syncro = 0.100  # time between read of the synchronisation value
 display_fps = 5  # number of framed pulled per second
 
+fish_eye_correction = True # if true active the fisheye correction
+fish_eye_parametter = 'cameraMatrice.json'
 
 # set the correct opc server in test
 if not test_setup:
