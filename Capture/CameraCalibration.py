@@ -3,7 +3,6 @@ import json
 import os
 import time
 
-import cv2
 import cv2 as cv
 import numpy as np
 
@@ -84,28 +83,49 @@ class CamCalib(CameraBase):
         """
         img_points = []
         obj_points = []
+
+        N_imm = 0
+
         for dummy in range(repeats):
             try:
                 i, o = self._process_chessboard(size=size)
                 img_points.extend(i)
                 obj_points.extend(o)
-                time.sleep(5)
+                N_imm += 1
             except Exception as e:
                 dummy -= 1
+                time.sleep(1)
                 print(e)
+
+        calibration_flags = cv.fisheye.CALIB_RECOMPUTE_EXTRINSIC + cv.fisheye.CALIB_CHECK_COND \
+                            + cv.fisheye.CALIB_FIX_SKEW
+
+        K = np.zeros((3, 3))
+        D = np.zeros((4, 1))
 
         w = int(self._camera.get(cv.CAP_PROP_FRAME_WIDTH))
         h = int(self._camera.get(cv.CAP_PROP_FRAME_HEIGHT))
 
+        rvecs = [np.zeros((1, 1, 3), dtype=np.float64) for i in range(N_imm)]
+        tvecs = [np.zeros((1, 1, 3), dtype=np.float64) for i in range(N_imm)]
+
+        print(np.array(obj_points, dtype=np.float32))
+
+        obj_points = np.reshape(obj_points, (N_imm, 1, size[0] * size[1], 3))
         # calculate camera distortion
-        rms, camera_matrix, dist_coefs, rvecs, tvecs = cv.calibrateCamera(obj_points, img_points, (w, h), None, None)
+        rms, _, _, _, _ = cv.fisheye.calibrate(
+            obj_points,
+            img_points,
+            (w, h),
+            K,
+            D,
+            rvecs,
+            tvecs,
+            calibration_flags,
+            (cv.TERM_CRITERIA_EPS + cv.TERM_CRITERIA_MAX_ITER, 30, 1e-6)
+        )
 
-        if debug:
-            print("\nRMS:", rms)
-            print("camera matrix:\n", camera_matrix)
-            print("distortion coefficients: ", dist_coefs.ravel())
-
-        return rms, camera_matrix, dist_coefs, rvecs, tvecs
+        return rms, K, D
 
     def find_homography(self, size=(9, 6)):
         grabbed, img = self._getter.read()
@@ -121,7 +141,7 @@ class CamCalib(CameraBase):
         pt_cam = self.get_chessboard(grayscale, size)
         pt_pattern = self.get_chessboard(pattern, size)
 
-        h, _mask = cv.findHomography(pt_cam, pt_pattern, cv2.RHO)
+        h, _mask = cv.findHomography(pt_cam, pt_pattern, cv.RHO)
 
         # get the size of the base image
         height, width = grayscale.shape
@@ -164,7 +184,6 @@ class CamCalib(CameraBase):
         objp[:, :2] = np.mgrid[0:size[0], 0:size[1]].T.reshape(-1, 2)
 
         # grab a frame
-        cv.waitKey(25)
         img = self._getter.read()
 
         # cv.imwrite("CameraCalibSetup.png", img) # TODO: remove report code
@@ -180,7 +199,7 @@ class CamCalib(CameraBase):
         if debug:
             cv.drawChessboardCorners(image=img, patternSize=size, corners=corners, patternWasFound=True)
             cv.imshow("test", img)
-
+            cv.waitKey(1)
             # cv.imwrite("CameraCalibExample.png", img)  # TODO: remove report code
         return img_points, obj_points
 
@@ -250,17 +269,14 @@ if __name__ == '__main__':
     if distort:
         img = calib._getter.read()
 
-        rms, camera_matrix, dist_coefs, rvecs, tvecs = calib.calibrate_fish_eye_distortion(repeats=100)
+        rms, K, D = calib.calibrate_fish_eye_distortion(repeats=10)
 
         h, w = img.shape[:2]
         print("distort")
-        newcameramtx, roi = cv.getOptimalNewCameraMatrix(camera_matrix, dist_coefs, (w, h), 1, (w, h))
 
-        dst = cv.undistort(img, camera_matrix, dist_coefs, None, newcameramtx)
+        map1, map2 = cv.fisheye.initUndistortRectifyMap(K, D, np.eye(3), K, (h, w), cv.CV_16SC2)
 
-        # crop and save the image
-        x, y, w, h = roi
-        dst = dst[y:y + h, x:x + w]
+        dst = cv.remap(img, map1, map2, interpolation=cv.INTER_LINEAR, borderMode=cv.BORDER_CONSTANT)
 
         cv.imshow("undistorted", dst)
 
@@ -269,10 +285,8 @@ if __name__ == '__main__':
                 fp.write(
                     json.dumps(
                         {
-                            'dist_coef' : dist_coefs.tolist(),
-                            'cameraMtx' : camera_matrix.tolist(),
-                            'NewCameraMtx': newcameramtx.tolist(),
-                            'roi' : roi,
+                            'map1': map1.tolist(),
+                            'map2': map2.tolist(),
                         },
                         indent=4
                     )
@@ -285,11 +299,11 @@ if __name__ == '__main__':
             try:
                 cv.waitKey(100)
                 img = calib._getter.read()
-                dst = cv.undistort(img, camera_matrix, dist_coefs, None, newcameramtx)
+                dst = cv.remap(img, map1, map2, interpolation=cv.INTER_LINEAR, borderMode=cv.BORDER_CONSTANT)
                 cv.imshow("test", dst)
                 corners = CamCalib.get_chessboard(cv.cvtColor(dst, cv.COLOR_BGR2GRAY))
-                cv.drawChessboardCorners(image=img, patternSize=(9,6), corners=corners, patternWasFound=True)
-                cv.imshow("test", img)
+                cv.drawChessboardCorners(image=dst, patternSize=(9, 6), corners=corners, patternWasFound=True)
+                cv.imshow("test", dst)
             except Exception as e:
                 print(e)
     if homo:

@@ -51,7 +51,6 @@ class DebugDisplay(DisplayBase):
 
     def show(self, image):
         cv.imshow(self._win_name, image)
-        print("refresh")
 
 
 class TkDisplay(DisplayBase):
