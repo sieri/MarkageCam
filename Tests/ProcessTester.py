@@ -11,9 +11,11 @@ from ImgTreatement import TreatImg, DebugDisplay
 
 import cv2 as cv
 
+scriptDetect= []
 preprocesseds = []
 corrected_imgs = []
 corrected_imgs_img = []
+
 
 
 def read_all():
@@ -40,11 +42,20 @@ def process_all():
 
     print("\rpreprocessed                        ")
 
+    for i, img in enumerate(preprocesseds):
+        print("\rScript detect img", i, "/", len(corrected_imgs), end="")
+        scriptDetect.append(TreatImg.script_detect(corrected_imgs_img[i],img))
+
 
 def _show(container, start=-1, stop=-1):
-    print(container[start:stop])
+
+    if start == stop:
+        cont = [container[start]]
+    else:
+        cont = container[start:stop]
+
     try:
-        for i, img in enumerate(container[start:stop]):
+        for i, img in enumerate(cont):
             DebugDisplay.show_resized(str(i), img)
     except IndexError:
         print("No such value")
@@ -65,3 +76,6 @@ def kill_all():
 if __name__ == '__main__':
     os.chdir('../')
     process_all()
+
+    show_preprocessed(0,0)
+    cv.waitKey(0)

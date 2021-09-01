@@ -1,3 +1,7 @@
+"""
+Group of fonctions to display images in a debug enviroment and testing
+"""
+
 import cv2 as cv
 import pytesseract as tess
 import numpy as np
@@ -66,6 +70,36 @@ def show():
         plt.xticks([])
     plt.ion()
     plt.show()
+
+
+def display_data(data, img):
+    """
+    draw the box around characters after script detection
+    :param box:
+    :param img:
+    :return:
+    """
+
+    if img[0, 0].size == 1:
+        drawn = cv.cvtColor(img, cv.COLOR_GRAY2RGB)
+    else:
+        drawn = img.copy()
+
+    for i in range(0, len(data['level'])):
+        if float(data['conf'][i]) < 0:
+            colour = (255, 0, 0)
+        elif float(data['conf'][i]) > 90:
+            colour = (0, 255, 0)
+        else:
+            colour = (0, 0, 255)
+
+        pt1 = (int(data['left'][i]), int(data['top'][i]))
+        pt2 = (pt1[0] + int(data['width'][i]), pt1[1] + int(data['height'][i]))
+
+        drawn = cv.rectangle(drawn, pt1=pt1, pt2=pt2, color=colour, thickness=5)
+
+    return drawn
+
 
 def init():
     plt.figure()

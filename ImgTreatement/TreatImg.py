@@ -4,9 +4,11 @@ from Data import DB
 from ImgTreatement import DebugDisplay
 from environement import debug
 import cv2 as cv
+import pytesseract as tess
 
 plotting = False
 
+tess.pytesseract.tesseract_cmd = "C:/Program Files/Tesseract-OCR/tesseract.exe"
 
 
 def process(img: DB.CorrectedImg):
@@ -40,8 +42,8 @@ def preprocess(img):
     e_list.append(cv.getTickCount())
 
     # denoise
-    # i = cv.fastNlMeansDenoising(i) #mesured as bottleneck 27s for execution
-    # e_list.append(cv.getTickCount())
+    i = cv.fastNlMeansDenoising(i) #mesured as bottleneck 27s for execution
+    e_list.append(cv.getTickCount())
 
     # mask
     i = mask(i)
@@ -60,21 +62,41 @@ def preprocess(img):
     i = cv.bitwise_not(i)
     e_list.append(cv.getTickCount())
 
-
     if debug:
-        DebugDisplay.show_resized("preprocessed", i)
         print("\n==TIMING PREPROCESSING")
-        for i in range(len(e_list)-1):
-            time = (e_list[i+1] - e_list[i]) / cv.getTickFrequency()
-            print("step,", i, "in", time, 's')
+        for index in range(len(e_list)-1):
+            time = (e_list[index+1] - e_list[index]) / cv.getTickFrequency()
+            print("step,", index, "in", time, 's')
         print("total:" , (e_list[-1] - e_list[0]) / cv.getTickFrequency(), "s")
 
-
-
     return i
+
 
 def script_detect(img, preprocessed):
     """
         Detect and split image with area of texts isolated
         :returns list of image segment, shape of the grid
     """
+    e_list = list()
+    e_list.append(cv.getTickCount())
+
+    data = tess.image_to_data(
+        img,
+        config='-c load_freq_dawg=false psm=1 hocr_char_boxes=1',
+        output_type=tess.Output.DICT
+    )
+
+    if debug:
+        print('\nScript Detect')
+        print(data)
+
+    e_list.append(cv.getTickCount())
+
+    if debug:
+        print("\n==TIMING OCR SCRIPT DETECT")
+        for index in range(len(e_list)-1):
+            time = (e_list[index+1] - e_list[index]) / cv.getTickFrequency()
+            print("step,", index, "in", time, 's')
+        print("total:" , (e_list[-1] - e_list[0]) / cv.getTickFrequency(), "s")
+
+    return data
