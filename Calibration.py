@@ -5,7 +5,7 @@ import tkinter as tk
 from tkinter import messagebox, filedialog
 from enum import Enum, auto
 
-from environement import debug
+from environement import debug, max_img_bytes
 
 """
 Script to run the camera calibration app
@@ -76,7 +76,7 @@ class CalibApp(CameraApp):
             command=self._cam.focus_sub
         )
 
-        self.ent_camera_ip.insert(0,"rtsp://")
+        self.ent_camera_ip.insert(0, "rtsp://")
 
         self.btn_focus_confirm = tk.Button(
             self.focus_frame,
@@ -101,6 +101,10 @@ class CalibApp(CameraApp):
 
         # bind functionalities extra functionalities
         self.ent_camera_ip.bind("<Return>", self.on_ent_camera_ip)
+        self._cvn_camera_viewfinder.bind("<Button-1>", self.event_canvas_click)
+
+        # create bonding box
+        self.bounding = Bounding(1, 1)
 
         # create state machine
         self.transitions = {
@@ -141,6 +145,9 @@ class CalibApp(CameraApp):
             fill='gray'
         )
 
+        # uncheck the checkbox
+        self.ckb_camera_confirm_value.set(False)
+
         # enable controls
         self.lbl_camera_IP['state'] = tk.NORMAL
         self.btn_camera_ip['state'] = tk.ACTIVE
@@ -168,15 +175,22 @@ class CalibApp(CameraApp):
                 self._cvn_camera_viewfinder.winfo_height()
             )
         )
+        # create bonding box
+        self.bounding = Bounding(
+            self._cvn_camera_viewfinder.winfo_width(),
+            self._cvn_camera_viewfinder.winfo_height()
+        )
         self.activate_frame_updates()
 
-        # activate controls
+        # uncheck the checkbox
+        self.ckb_camera_confirm_value.set(False)
 
+        # activate controls
         self.lbl_camera_IP['state'] = tk.NORMAL
         self.ckb_camera_confirm['state'] = tk.ACTIVE
         self.btn_camera_ip['state'] = tk.ACTIVE
         self.ent_camera_ip['state'] = tk.NORMAL
-        
+
         # deactivate controls
         self.btn_focus_confirm['state'] = tk.DISABLED
         self.btn_focus_add['state'] = tk.DISABLED
@@ -196,7 +210,17 @@ class CalibApp(CameraApp):
     def on_save_config_entry(self):
 
         try:
-            self._cam.calibrate()
+            img_size = self._cam.calibrate(
+                self.bounding.coord(),
+                self._cvn_camera_viewfinder.winfo_width(),
+                self._cvn_camera_viewfinder.winfo_height()
+            )
+
+            if img_size > max_img_bytes:
+                messagebox.showerror("Warning", "Image produced would be too big, reduce capture area")
+                self.change_state(States.CAMERA_CONFIRMED)
+                return
+
         except Exception as e:
             messagebox.showerror("Error", e)
             self.change_state(States.CAMERA_CONFIRMED)
@@ -215,7 +239,6 @@ class CalibApp(CameraApp):
                 messagebox.showerror("Error", "couldn't save the file")
                 self.change_state(States.CAMERA_CONFIRMED)
             self.change_state(States.INITIAL)
-
 
     def event_btn_confirm_ip(self):
         """
@@ -240,6 +263,70 @@ class CalibApp(CameraApp):
             self.change_state(States.CAMERA_CONFIRMED)
         else:
             self.change_state(States.VIEW_FINDER)
+
+    def event_canvas_click(self, event):
+        # outputting x and y coords to console
+        self.bounding.click(event.x, event.y)
+
+    def _update_frame(self):
+        super(CalibApp, self)._update_frame()
+        self.bounding.draw(self._cvn_camera_viewfinder)
+
+
+class Bounding:
+    def __init__(self, width, height):
+        self.corners = [
+            Corner(0, 0),
+            Corner(0, height - 1),
+            Corner(width - 1, height - 1),
+            Corner(width - 1, 0)
+        ]
+
+        self.active = False
+        self.currentActive = None
+
+    def draw(self, canvas):
+        for i, corner in enumerate(self.corners):
+            canvas.create_line(
+                corner.x,
+                corner.y,
+                self.corners[i - 1].x,
+                self.corners[i - 1].y,
+                width=3,
+                fill='blue'
+            )
+        for corner in self.corners:
+            corner.draw(canvas)
+
+    def click(self, x,y):
+        if self.active:
+            self.currentActive.x = x
+            self.currentActive.y = y
+            self.currentActive.active = False
+            self.active = False
+            self.currentActive = None
+        else:
+            for corner in self.corners:
+                if abs(corner.x-x) <= 6 and abs(corner.y-y) <= 6:
+                    corner.active = True
+                    self.active = True
+                    self.currentActive = corner
+                    break
+
+    def coord(self):
+        return [[c.x, c.y] for c in self.corners]
+
+class Corner:
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+        self.active = False
+
+    def draw(self, canvas):
+        if self.active:
+            canvas.create_oval(self.x - 5, self.y - 5, self.x + 5, self.y + 5, fill='green')
+        else:
+            canvas.create_oval(self.x - 5, self.y - 5, self.x + 5, self.y + 5, fill='red')
 
 
 if __name__ == '__main__':

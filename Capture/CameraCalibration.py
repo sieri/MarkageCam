@@ -138,7 +138,7 @@ class CamCalib(CameraBase):
                 except IndexError:
                     raise err
 
-    def find_homography(self, size=(9, 6)):
+    def find_homography(self, corners=None,size=(9, 6)):
         img = self._getter.read()
 
         grayscale = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
@@ -151,14 +151,15 @@ class CamCalib(CameraBase):
 
         h, _mask = cv.findHomography(pt_cam, pt_pattern, cv.RHO)
 
-        # get the size of the base image
-        height, width = grayscale.shape
-        corners = np.array([
-            [0, 0],
-            [0, height - 1],
-            [width - 1, height - 1],
-            [width - 1, 0]
-        ])
+        if corners is None:
+            # get the size of the base imag
+            height, width = grayscale.shape
+            corners = np.array([
+                [0, 0],
+                [0, height - 1],
+                [width - 1, height - 1],
+                [width - 1, 0]
+            ])
 
         # perspective shift those corners
         corners = cv.perspectiveTransform(np.float32([corners]), h)[0]
@@ -219,8 +220,13 @@ class CamCalib(CameraBase):
         self._focus -= self._focus_increment
         self._update_focus()
 
-    def calibrate(self):
-        self._h, self._width, self._height = self.find_homography()
+    def calibrate(self, picture_corners, picture_width, picture_height):
+        width,height = self.get_img_size()
+        corners = np.array([[x*width/picture_width,y*height/picture_height] for x,y in picture_corners])
+        self._h, self._width, self._height = self.find_homography(corners=corners)
+
+        return self._width*self._height*3
+
 
     def save(self, filename):
 

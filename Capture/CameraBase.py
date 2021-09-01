@@ -65,3 +65,11 @@ class CameraBase:
         :return: the last frame captured
         """
         return self._display.lastFrame
+
+    def get_img_size(self):
+        """
+        :return: tuple of the width and height of the camera picture
+        """
+        width = self._camera.get(cv.CAP_PROP_FRAME_WIDTH)
+        height = self._camera.get(cv.CAP_PROP_FRAME_HEIGHT)
+        return width, height
