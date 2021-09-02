@@ -11,7 +11,7 @@ synchro = None
 
 
 def get_text(server_name=default_opc_server):
-    return "Text wanted"
+    return "This is a test plate ** 42 is the answer #"
 
 
 def set_synchro(callback, server_name=default_opc_server):
@@ -24,7 +24,7 @@ def set_synchro(callback, server_name=default_opc_server):
         subprocess.Popen('python ./tests/AutomateSimulator.py')
 
 def get_repetions(server_name=default_opc_server):
-    return (1,5)
+    return (1,7)
 
 def kill_synchro():
     global synchro

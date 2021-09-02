@@ -5,11 +5,21 @@ from ImgTreatement import DebugDisplay
 from environement import debug
 import cv2 as cv
 import pytesseract as tess
-
+from ProcessSteps import gen_step
 plotting = False
 
 tess.pytesseract.tesseract_cmd = "C:/Program Files/Tesseract-OCR/tesseract.exe"
 
+preprocess_steps = []
+
+def init(preprocess_file: str):
+    global preprocess_steps
+    with open(preprocess_file, 'r') as f:
+        preprocess_steps = gen_step(f.read())
+
+def init_str(preprocess_data : str)
+    global preprocess_steps
+    preprocess_steps = gen_step(preprocess_data)
 
 def process(img: DB.CorrectedImg):
     """
@@ -21,53 +31,9 @@ def process(img: DB.CorrectedImg):
     preprocess(img.img)
 
 
-
-
-def mask(img):
-    avg = np.average(img)
-    ## get the edge coordinates
-    pos = np.where(img > 180)
-    ## divide
-    img[pos] = avg
-    return img
-
 def preprocess(img):
-
-    e_list = list()
-    e_list.append(cv.getTickCount())
-
-
-    # convert to grayscale image
-    i = cv.cvtColor(img, cv.COLOR_BGR2GRAY, dstCn=0)
-    e_list.append(cv.getTickCount())
-
-    # denoise
-    i = cv.fastNlMeansDenoising(i) #mesured as bottleneck 27s for execution
-    e_list.append(cv.getTickCount())
-
-    # mask
-    i = mask(i)
-    e_list.append(cv.getTickCount())
-
-    #detect edges
-    i = cv.Canny(i, 50, 150, L2gradient=True)
-    e_list.append(cv.getTickCount())
-
-    #dilate
-    kernel = np.ones((5, 5), np.uint8)
-    i = cv.dilate(i, kernel, iterations=3)
-    e_list.append(cv.getTickCount())
-
-    #invert
-    i = cv.bitwise_not(i)
-    e_list.append(cv.getTickCount())
-
-    if debug:
-        print("\n==TIMING PREPROCESSING")
-        for index in range(len(e_list)-1):
-            time = (e_list[index+1] - e_list[index]) / cv.getTickFrequency()
-            print("step,", index, "in", time, 's')
-        print("total:" , (e_list[-1] - e_list[0]) / cv.getTickFrequency(), "s")
+    for step in preprocess_steps:
+        img = step[0](img, step[1])
 
     return i
 
@@ -100,3 +66,4 @@ def script_detect(img, preprocessed):
         print("total:" , (e_list[-1] - e_list[0]) / cv.getTickFrequency(), "s")
 
     return data
+
