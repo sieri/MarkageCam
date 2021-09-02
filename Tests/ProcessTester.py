@@ -1,3 +1,4 @@
+import json
 import os
 import time
 
@@ -11,11 +12,10 @@ from ImgTreatement import TreatImg, DebugDisplay
 
 import cv2 as cv
 
-scriptDetect= []
+scriptDetect = []
 preprocesseds = []
 corrected_imgs = []
 corrected_imgs_img = []
-
 
 
 def read_all():
@@ -44,11 +44,10 @@ def process_all():
 
     for i, img in enumerate(preprocesseds):
         print("\rScript detect img", i, "/", len(corrected_imgs), end="")
-        scriptDetect.append(TreatImg.script_detect(corrected_imgs_img[i],img))
+        scriptDetect.append(TreatImg.script_detect(corrected_imgs_img[i], img))
 
 
 def _show(container, start=-1, stop=-1):
-
     if start == stop:
         cont = [container[start]]
     else:
@@ -75,7 +74,36 @@ def kill_all():
 
 if __name__ == '__main__':
     os.chdir('../')
+
+    base_process = {
+        'steps': [
+            {
+                'func': 'remove_color',
+                'kwargs': {}
+            },
+            {
+                'func': 'mask',
+                'kwargs': {'avg': True, 'val':128}
+            },
+            {
+                'func': 'canny',
+                'kwargs': {'threshold1': 50, 'threshold2': 100}
+            },
+            {
+                'func': 'dilate',
+                'kwargs': {'kernelx': 3, 'kernely': 3, 'iterations': 2}
+            },
+            {
+                'func': 'invert',
+                'kwargs': {}
+            },
+        ]
+    }
+
+    TreatImg.init_str(json.dumps(base_process))
+
+
     process_all()
 
-    show_preprocessed(0,0)
+    show_preprocessed(0, 0)
     cv.waitKey(0)
