@@ -102,8 +102,11 @@ if __name__ == '__main__':
 
     TreatImg.init_str(json.dumps(base_process))
 
+    img = cv.imread('test_plater.png')
 
-    process_all()
+    data = TreatImg.script_detect(img, img)
 
-    show_preprocessed(0, 0)
+    DebugDisplay.show_resized("Data",DebugDisplay.display_data(data, img))
+
+    #show_preprocessed(0, 0)
     cv.waitKey(0)

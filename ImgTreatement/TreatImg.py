@@ -66,10 +66,8 @@ def script_detect(img, preprocessed):
     e_list = list()
     e_list.append(cv.getTickCount())
 
-    data = tess.image_to_data(
-        img,
-        config='-c load_freq_dawg=false psm=1 hocr_char_boxes=1',
-        output_type=tess.Output.DICT
+    data = tess.image_to_osd(
+        img
     )
 
     if debug:
