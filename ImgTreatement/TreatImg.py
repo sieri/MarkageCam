@@ -67,7 +67,7 @@ def script_detect(img, preprocessed):
     e_list.append(cv.getTickCount())
 
     data = tess.image_to_data(
-        img,
+        preprocessed,
         lang='Dot_matrix',
         output_type=tess.Output.DICT,
         config='--psm 6'
@@ -86,4 +86,28 @@ def script_detect(img, preprocessed):
             print("step,", index, "in", time, 's')
         print("total:", (e_list[-1] - e_list[0]) / cv.getTickFrequency(), "s")
 
-    return data
+    imgs = []
+
+    for i, value in enumerate(data['level']):
+        if value == 4:
+            name = "out/%s_%s.png" % (i, value)
+            width = data['width'][i]
+            height = data['height'][i]
+            left = data['left'][i]
+            top = data['top'][i]
+
+            new = img[top:top + height, left:left + width]
+            imgs.append(new)
+
+    return imgs
+
+
+def read_line(img):
+    data = tess.image_to_data(
+        img,
+        lang='Dot_matrix',
+        output_type=tess.Output.DICT,
+        config='--psm 7'  # treat image line
+    )
+    DebugDisplay.show_resized("img",DebugDisplay.display_data(data, img))
+    print(data)

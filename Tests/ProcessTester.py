@@ -104,9 +104,10 @@ if __name__ == '__main__':
 
     img = cv.imread('test_plater.png')
 
-    data = TreatImg.script_detect(img, img)
-
-    DebugDisplay.show_resized("Data", DebugDisplay.display_data(data, img))
+    imgs = TreatImg.script_detect(img, img)
+    print("Found %s lines" % len(imgs))
+    for i in imgs:
+        TreatImg.read_line(i)
 
     #show_preprocessed(0, 0)
     cv.waitKey(0)
