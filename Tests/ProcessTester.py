@@ -106,7 +106,7 @@ if __name__ == '__main__':
 
     data = TreatImg.script_detect(img, img)
 
-    DebugDisplay.show_resized("Data",DebugDisplay.display_data(data, img))
+    DebugDisplay.show_resized("Data", DebugDisplay.display_data(data, img))
 
     #show_preprocessed(0, 0)
     cv.waitKey(0)

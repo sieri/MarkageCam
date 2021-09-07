@@ -85,6 +85,8 @@ def display_data(data, img):
     else:
         drawn = img.copy()
 
+    print(data['level'])
+
     for i in range(0, len(data['level'])):
         if float(data['conf'][i]) < 0:
             colour = (255, 0, 0)
