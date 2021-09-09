@@ -24,6 +24,15 @@ class Cam(CameraBase):
             with open(config_file) as fp:
                 self._config = json.load(fp)
                 self._config['h'] = np.array(self._config['h'])
+                if self._config['rotate'] != 0:
+                    rot_mat = cv.getRotationMatrix2D(
+                        center=(self._config['width']/2,self._config['height']/2),
+                        angle=self._config['rotate'],
+                        scale=1
+                    )
+                    rot_mat = np.vstack([rot_mat,[0,0,1]])  # transform into correct 3x3 affine transform matrice
+
+                    self._config['h'] = np.matmul(rot_mat,self._config['h'])
 
         except (IOError, FileNotFoundError):
             print("Unable to load camera config file. Run Calibration")

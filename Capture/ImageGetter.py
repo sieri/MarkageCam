@@ -33,8 +33,6 @@ class ImageGetter:
                     cv.CV_16SC2
                 )
 
-
-
     def start(self):
         self.stopped = False
         self._thread.start()

@@ -15,6 +15,7 @@ class DisplayBase():
         self._getter = getter
         self._thread = Thread(target=self.get, args=())
         self._thread.setName("Thread for display")
+        self._stopped = True
 
     def start(self):
         self._stopped = False

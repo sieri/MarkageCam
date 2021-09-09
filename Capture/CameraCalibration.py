@@ -241,6 +241,7 @@ class CamCalib(CameraBase):
                             'width': self._width,
                             'height': self._height,
                             'delay': 0,
+                            'rotate': 0,
                         },
                         indent=4
                     )

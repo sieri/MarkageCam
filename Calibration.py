@@ -222,6 +222,7 @@ class CalibApp(CameraApp):
                 return
 
         except Exception as e:
+            print(e)
             messagebox.showerror("Error", e)
             self.change_state(States.CAMERA_CONFIRMED)
             return
