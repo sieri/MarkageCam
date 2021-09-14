@@ -17,14 +17,14 @@ from environement import default_opc_server, pulling_time_syncro, test_setup
 synchro = None
 
 address_text = 'R_EBS_Texte'
-address_x_repeats = 'R_EBS_Repetition'
+address_x_repeats = 'R_EBS_Rep'
 address_y_repeats = 'R_EBS_Nbr_Ligne'
 address_trigger = 'M_Trigger_Camera'
 
 
 def get_text(server_name=default_opc_server):
     with OpcClient(server_name) as opc:
-        return opc.opc[address_text]
+        return opc.opc.read(address_text, source='device')[0]
 
 
 def set_synchro(callback, server_name=default_opc_server):
@@ -38,7 +38,7 @@ def set_synchro(callback, server_name=default_opc_server):
 
 def get_repetions(server_name=default_opc_server):
     with OpcClient(server_name) as opc:
-        return (opc.opc[address_x_repeats], opc.opc[address_y_repeats])
+        return opc.opc.read(address_x_repeats, source='device')[0], opc.opc.read(address_y_repeats, source='device')[0]
 
 def kill_synchro():
     global synchro
@@ -71,11 +71,10 @@ class Synchro:
         trigger = False
         with OpcClient(self._server_name) as opc:
             while self._running:
-                if opc.opc[address_trigger]:
+                if read(address_trigger, source='device')[0]:
                     if not trigger:
                         self._callback()
                         trigger = True
-                        print(opc.opc[address_text])
                 elif trigger:
                     trigger = False
 
