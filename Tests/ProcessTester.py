@@ -74,9 +74,6 @@ def kill_all():
 if __name__ == '__main__':
     os.chdir('../')
 
-
-
-
     img = cv.imread('test_plater.png')
 
     imgs = TreatImg.script_detect(img, img)

@@ -40,6 +40,7 @@ def get_repetions(server_name=default_opc_server):
     with OpcClient(server_name) as opc:
         return opc.opc.read(address_x_repeats, source='device')[0], opc.opc.read(address_y_repeats, source='device')[0]
 
+
 def kill_synchro():
     global synchro
     # noinspection PyUnresolvedReferences
