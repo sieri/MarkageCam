@@ -6,8 +6,8 @@ iterables = []
 
 def iterate():
     current_int = 0
-    index = 1
-    filename = "out/processConfig%s.json"
+    index = 0
+    filename = "out/baseprocess/processConfig%s.json"
     while True:
         index += 1
         j = IterEncoder().encode(base_process)
@@ -76,7 +76,8 @@ base_process = {
 }
 if __name__ == '__main__':
     os.chdir('../')
-    if not os.path.exists('out'):
+    if not os.path.exists('out/baseprocess'):
         os.mkdir('out')
+        os.mkdir('out/baseprocess')
 
     iterate()

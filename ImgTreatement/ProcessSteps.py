@@ -4,6 +4,7 @@ import numpy as np
 import sys
 import cv2 as cv
 
+
 def remove_color(img, **kwargs):
     """
     processs step

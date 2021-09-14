@@ -3,13 +3,14 @@ import os
 
 import environement
 
-environement.debug = True
+environement.debug = False
 
 from Data import DB
 
 from ImgTreatement import TreatImg, DebugDisplay
 
 import cv2 as cv
+from shutil import copyfile
 
 scriptDetect = []
 preprocesseds = []
@@ -28,7 +29,6 @@ def read_all():
 
 
 def process_all():
-    read_all()
     global preprocesseds
 
     img: DB.CorrectedImg
@@ -71,18 +71,38 @@ def kill_all():
     cv.destroyAllWindows()
 
 
+OCR_test = 1
+FIND_BASE_PROC = 2
+
 if __name__ == '__main__':
     os.chdir('../')
 
+    mode = FIND_BASE_PROC
+
+    if mode == OCR_test:
+        img = cv.imread('test_plater.png')
+
+        imgs = TreatImg.script_detect(img, img)
+        print("Found %s lines" % len(imgs))
+        for i in imgs:
+            TreatImg.read_line(i)
+    elif mode == FIND_BASE_PROC:
+        if not os.path.exists('out/selected'):
+            os.mkdir('out/selected')
+        read_all()
+        folder = 'out/baseprocess/'
+        for filename in os.listdir(folder):
+            preprocesseds.clear()
+            scriptDetect.clear()
+            TreatImg.init(folder+filename)
+            process_all()
+            correct = True
+            for i in scriptDetect:
+                if len(i) != 7:
+                    correct = False
+                    break
+            if correct:
+                copyfile(folder+filename,'out/selected/'+filename)
 
 
-
-    img = cv.imread('test_plater.png')
-
-    imgs = TreatImg.script_detect(img, img)
-    print("Found %s lines" % len(imgs))
-    for i in imgs:
-        TreatImg.read_line(i)
-
-    # show_preprocessed(0, 0)
     cv.waitKey(0)
