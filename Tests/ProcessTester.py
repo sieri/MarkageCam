@@ -73,11 +73,12 @@ def kill_all():
 
 OCR_test = 1
 FIND_BASE_PROC = 2
+FIND_REFINED_PROC = 3
 
 if __name__ == '__main__':
     os.chdir('../')
 
-    mode = FIND_BASE_PROC
+    mode = OCR_test
 
     if mode == OCR_test:
         img = cv.imread('test_plater.png')
@@ -86,6 +87,7 @@ if __name__ == '__main__':
         print("Found %s lines" % len(imgs))
         for i in imgs:
             TreatImg.read_line(i)
+
     elif mode == FIND_BASE_PROC:
         if not os.path.exists('out/selected'):
             os.mkdir('out/selected')
@@ -94,7 +96,7 @@ if __name__ == '__main__':
         for filename in os.listdir(folder):
             preprocesseds.clear()
             scriptDetect.clear()
-            TreatImg.init(folder+filename)
+            TreatImg.init(folder + filename)
             process_all()
             correct = True
             for i in scriptDetect:
@@ -102,7 +104,24 @@ if __name__ == '__main__':
                     correct = False
                     break
             if correct:
-                copyfile(folder+filename,'out/selected/'+filename)
+                copyfile(folder + filename, 'out/selected/' + filename)
 
+    elif mode == FIND_REFINED_PROC:
+        if not os.path.exists('out/refined'):
+            os.mkdir('out/refined')
+        read_all()
+        folder = 'out/selected/'
+        for filename in os.listdir(folder):
+            preprocesseds.clear()
+            scriptDetect.clear()
+            TreatImg.init(folder + filename)
+            process_all()
+            correct = True
+            for i in scriptDetect:
+                if False: # TODO: make condition
+                    correct = False
+                    break
+            if correct:
+                copyfile(folder + filename, 'out/refined/' + filename)
 
     cv.waitKey(0)

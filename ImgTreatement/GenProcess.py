@@ -5,6 +5,15 @@ iterables = []
 
 
 def iterate():
+    # check number generated
+    l = 1
+    for it in iterables:
+        l *= len(it.r)
+
+    print(l)
+    if l > 10000:
+        return
+
     current_int = 0
     index = 0
     filename = "out/baseprocess/processConfig%s.json"
@@ -58,15 +67,16 @@ base_process = {
         },
         {
             'func': 'mask',
-            'kwargs': {'avg': Iter([True,False]), 'val': Iter(range(128, 255))}
+            'kwargs': {'avg': Iter([False]), 'val': Iter(range(60, 150, 20))}
         },
         {
             'func': 'canny',
-            'kwargs': {'threshold1': 50, 'threshold2': 100}
+            'kwargs': {'threshold1': Iter(range(0, 90, 20)), 'threshold2': Iter(range(50, 150, 20))}
         },
         {
             'func': 'dilate',
-            'kwargs': {'kernelx': 3, 'kernely': 3, 'iterations': 2}
+            'kwargs': {'kernelx': Iter(range(1, 5, 1)), 'kernely': Iter(range(1, 5, 1)),
+                       'iterations': Iter(range(1, 5, 1))}
         },
         {
             'func': 'invert',
