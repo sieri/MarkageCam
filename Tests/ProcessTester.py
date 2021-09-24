@@ -86,7 +86,12 @@ if __name__ == '__main__':
         imgs = TreatImg.script_detect(img, img)
         print("Found %s lines" % len(imgs))
         for i in imgs:
-            TreatImg.read_line(i)
+
+            data,img = TreatImg.read_line(i)
+            DebugDisplay.show_resized("img", DebugDisplay.display_data(data, img))
+            print(data)
+
+        cv.waitKey(0)
 
     elif mode == FIND_BASE_PROC:
         if not os.path.exists('out/selected'):
@@ -118,10 +123,12 @@ if __name__ == '__main__':
             process_all()
             correct = True
             for i in scriptDetect:
-                if False: # TODO: make condition
-                    correct = False
-                    break
+                for img in i:
+                    line = TreatImg.read_line(img)
+
+                    if not ("This" in line['text'] and "the" in line['text'] and "**" in line['text'] and "#" in line['text']):
+                        correct = False
             if correct:
                 copyfile(folder + filename, 'out/refined/' + filename)
 
-    cv.waitKey(0)
+

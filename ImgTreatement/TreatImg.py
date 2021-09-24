@@ -6,7 +6,7 @@ from environement import debug
 import cv2 as cv
 import pytesseract as tess
 from ImgTreatement.ProcessSteps import gen_step
-
+from ImgTreatement import ProcessSteps
 plotting = False
 
 tess.pytesseract.tesseract_cmd = "C:/Program Files/Tesseract-OCR/tesseract.exe"
@@ -88,6 +88,9 @@ def script_detect(img, preprocessed):
 
     imgs = []
 
+    DebugDisplay.show_resized("line_detect", DebugDisplay.display_data(data, preprocessed))
+    print("script Detect", data)
+
     for i, value in enumerate(data['level']):
         if value == 4:
             name = "out/%s_%s.png" % (i, value)
@@ -103,11 +106,32 @@ def script_detect(img, preprocessed):
 
 
 def read_line(img):
+    bordersize = 10
+
+    img = cv.copyMakeBorder(
+        src=img,
+        top=bordersize,
+        bottom=bordersize,
+        left=bordersize,
+        right=bordersize,
+        borderType=cv.BORDER_CONSTANT,
+        value=(255, 255, 255)
+
+    )
+
+    DebugDisplay.show_resized("test", img)
+
+    img = cv.erode(img, np.ones((2,2), np.uint8),iterations=2)
+    img = cv.dilate(img, np.ones((2,2), np.uint8),iterations=2)
+
+    DebugDisplay.show_resized("test2", img)
+
+
     data = tess.image_to_data(
         img,
         lang='Dot_matrix',
         output_type=tess.Output.DICT,
         config='--psm 7'  # treat image line
     )
-    DebugDisplay.show_resized("img",DebugDisplay.display_data(data, img))
-    print(data)
+
+    return data, img

@@ -78,6 +78,21 @@ def dilate(img, **kwargs):
     return cv.dilate(img, np.ones((kwargs['kernelx'], kwargs['kernely']), np.uint8), iterations=kwargs['iterations'])
 
 
+def errode(img, **kwargs):
+    """
+    processs step
+    errde the image
+    :param img: image to process
+    :param kwargs:
+        :keyword kernelx: x value of a kernel
+        :keyword kernely: y value of a kernel
+        :keyword iterations: number of iteration
+    :return: processed image
+    """
+    return cv.erode(img, np.ones((kwargs['kernelx'], kwargs['kernely']), np.uint8), iterations=kwargs['iterations'])
+
+
+
 def invert(img, **kwargs):
     """
     processs step
