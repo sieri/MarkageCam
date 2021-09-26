@@ -9,3 +9,4 @@ out/
 !installers/
 installers/*
 !installers/*.bat
+!ImgTreatement/configs/*.json

@@ -103,6 +103,23 @@ def invert(img, **kwargs):
     """
     return cv.bitwise_not(img)
 
+def add_border(img, **kwargs):
+    """
+    processs step
+    adds borders to an image, BW only
+    :param img: image to process
+    :param kwargs: None
+    :return: processed image
+    """
+    return cv.copyMakeBorder(
+        src=img,
+        top=kwargs["border_size"],
+        bottom=kwargs["border_size"],
+        left=kwargs["border_size"],
+        right=kwargs["border_size"],
+        borderType=cv.BORDER_CONSTANT,
+        value=255,
+    )
 
 def gen_step(json_data: str):
     data = json.loads(json_data)

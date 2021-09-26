@@ -71,18 +71,18 @@ def kill_all():
     cv.destroyAllWindows()
 
 
-OCR_test = 1
+OCR_TEST = 1
 FIND_BASE_PROC = 2
 FIND_REFINED_PROC = 3
 
 if __name__ == '__main__':
     os.chdir('../')
 
-    mode = OCR_test
+    mode = OCR_TEST
 
-    if mode == OCR_test:
-        img = cv.imread('test_plater.png')
-
+    if mode == OCR_TEST:
+        img = cv.imread('test_plate_background.png')
+        TreatImg.init_read()
         imgs = TreatImg.script_detect(img, img)
         print("Found %s lines" % len(imgs))
         for i in imgs:
@@ -101,7 +101,7 @@ if __name__ == '__main__':
         for filename in os.listdir(folder):
             preprocesseds.clear()
             scriptDetect.clear()
-            TreatImg.init(folder + filename)
+            TreatImg.init_preprocess(folder + filename, string_out=True)
             process_all()
             correct = True
             for i in scriptDetect:
@@ -115,18 +115,22 @@ if __name__ == '__main__':
         if not os.path.exists('out/refined'):
             os.mkdir('out/refined')
         read_all()
-        folder = 'out/selected/'
+        folder = 'out/sel/'
         for filename in os.listdir(folder):
+            print("testing ", filename)
             preprocesseds.clear()
             scriptDetect.clear()
-            TreatImg.init(folder + filename)
+            TreatImg.init_preprocess(folder + filename)
+            TreatImg.init_read(string_out=True)
             process_all()
             correct = True
             for i in scriptDetect:
                 for img in i:
+                    cv.imshow("test", img)
+                    cv.waitKey(1)
                     line = TreatImg.read_line(img)
-
-                    if not ("This" in line['text'] and "the" in line['text'] and "**" in line['text'] and "#" in line['text']):
+                    print("line", line)
+                    if not line == "This is the test plate ** 42 is the answer #":
                         correct = False
             if correct:
                 copyfile(folder + filename, 'out/refined/' + filename)
