@@ -67,6 +67,7 @@ def canny(img, **kwargs):
     """
     return cv.Canny(img, kwargs['threshold1'], kwargs['threshold2'], L2gradient=True)
 
+
 def threshold(img, **kwargs):
     """
     processs step
@@ -79,6 +80,20 @@ def threshold(img, **kwargs):
     """
 
     img = cv.adaptiveThreshold(img, 255, cv.ADAPTIVE_THRESH_MEAN_C, cv.THRESH_BINARY, kwargs['size'], kwargs['C'])
+    return img
+
+
+def resize(img, **kwargs):
+    """
+    processs step
+    resize for character height
+    :param img: image to process
+    :param kwargs:
+        :keyword size: the value of the size new height
+    :return: processed image
+    """
+    length = int(img.shape[1]*kwargs['size']/img.shape[0])
+    img = cv.resize(img, dsize=(length, kwargs['size']), interpolation=cv.INTER_LINEAR)
     return img
 
 

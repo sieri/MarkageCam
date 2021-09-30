@@ -12,12 +12,10 @@ environement.debug = False
 
 from Data import DB
 
-from ImgTreatement import TreatImg, DebugDisplay
+from ImgTreatement import TreatImg, DebugDisplay, ProcessSteps
 
 import cv2 as cv
 from shutil import copyfile
-
-from Lib.difflib import ndiff
 
 scriptDetect = []
 preprocesseds = []
@@ -94,7 +92,6 @@ def note_line(to_note: str, ref: str):
     :return: note, bigger is worse aime for 0
     """
 
-
     d = {}
     lenstr1 = len(to_note)
     lenstr2 = len(ref)
@@ -132,29 +129,33 @@ if __name__ == '__main__':
 
     test_line = "This is the test plate ** 42 is the answer #"
 
+    print(note_line("This is the test plate ** 42 is the answer #", test_line))
+
+    img = cv.imread('img.jpg')
     if mode == OCR_TEST:
-        img = cv.imread('img.jpg')
-        TreatImg.init_read(string_out=False)
+        TreatImg.init_read(string_out=True)
         imgs = TreatImg.script_detect(img, img)
         print("Found %s lines" % len(imgs))
         for index, i in enumerate(imgs):
-            data, img = TreatImg.read_line(i)
-            DebugDisplay.show_resized("img", DebugDisplay.display_data(data, img))
+            #data, img = TreatImg.read_line(i)
+            s = TreatImg.read_line(i)
+            print(note_line(s,ref=test_line))
+            # DebugDisplay.show_resized("img", DebugDisplay.display_data(data, img))
             cv.imwrite('out/output%s.png' % index, img)
-            print(data)
+            print(s)
 
         cv.waitKey(0)
     if mode == OCR_FIND_PROC:
         if not os.path.exists('out/read_selected'):
             os.mkdir('out/read_selected')
-        img = cv.imread('img.jpg')
+
         folder = 'out/read_baseprocess/'
 
         min_val = float('inf')
         min_files = []
 
         for filename in os.listdir(folder):
-            TreatImg.init_read(folder+filename,string_out=True)
+            TreatImg.init_read(folder + filename, string_out=True)
             imgs = TreatImg.script_detect(img, img)
 
             note = 0
@@ -176,8 +177,6 @@ if __name__ == '__main__':
 
         for f in min_files:
             copyfile(folder + f, 'out/read_selected/' + f)
-
-
 
         cv.waitKey(0)
     elif mode == FIND_BASE_PROC:

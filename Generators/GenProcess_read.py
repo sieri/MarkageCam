@@ -9,16 +9,22 @@ base_read_process = {
             'kwargs': {}
         },
         {
+            "func": "resize",
+            "kwargs": {
+                "size": 50
+            }
+        },
+        {
             "func": "threshold",
             "kwargs": {
-                "size": Iter(range(15,25,2)),
-                "C": Iter(range(-10,10)),
+                "size": Iter(range(3, 40, 2)),
+                "C": Iter(range(0, 25)),
             }
         },
         {
             "func": "add_border",
             "kwargs": {
-                "border_size": 10
+                "border_size": 255
             }
         },
         {
@@ -34,7 +40,6 @@ base_read_process = {
 
     ]
 }
-
 
 read_process_folder = "out/read_baseprocess"
 

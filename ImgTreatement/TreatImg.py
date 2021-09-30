@@ -132,12 +132,12 @@ def read_line(img):
         img = step[0](img, **step[1])
 
     if to_string:
-        return tess.image_to_string(
+        return tess.image_to_string(  # return the string
             img,
             lang='Dot_matrix',
             output_type=tess.Output.STRING,
             config='--psm 7'  # treat image line
-        )
+        ).strip()  # remove white space and characters at the end
     else:
         data = tess.image_to_data(
             img,
