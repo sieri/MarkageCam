@@ -23,18 +23,28 @@ def iterate(base_process, folder):
             f.write(j)
         return
 
+    points = []
+
     while True:
         index += 1
         j = IterEncoder().encode(base_process)
+        newPoint = []
+        for i in iterables:
+            newPoint.append(i.get_val())
+        points.append(newPoint)
+
+
         with open(filename % index, 'w') as f:
             f.write(j)
         while iterables[current_int].iter():
             current_int += 1
             if current_int == len(iterables):
+                j =json.JSONEncoder().encode(points)
+                with open("dataPoint.json", 'w') as f:
+                    f.write(j)
                 return  # end of process
 
         current_int = 0
-
 
 class Iter:
     def __init__(self, r):

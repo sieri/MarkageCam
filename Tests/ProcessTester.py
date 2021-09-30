@@ -153,7 +153,7 @@ if __name__ == '__main__':
 
         min_val = float('inf')
         min_files = []
-
+        points = []
         for filename in os.listdir(folder):
             TreatImg.init_read(folder + filename, string_out=True)
             imgs = TreatImg.script_detect(img, img)
@@ -165,7 +165,7 @@ if __name__ == '__main__':
                 print("line:", s)
                 note += note_line(s, test_line)
             print("note", note)
-
+            points.append(note)
             if note < min_val:
                 min_files.clear()
                 min_files.append(filename)
@@ -178,7 +178,11 @@ if __name__ == '__main__':
         for f in min_files:
             copyfile(folder + f, 'out/read_selected/' + f)
 
-        cv.waitKey(0)
+        j = json.JSONEncoder().encode(points)
+        with open("dataPoint2.json", 'w') as f:
+            f.write(j)
+
+
     elif mode == FIND_BASE_PROC:
         if not os.path.exists('out/selected'):
             os.mkdir('out/selected')
