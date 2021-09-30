@@ -1,12 +1,25 @@
 import os
 
-from Generators.Iterable import iterate
+from Generators.Iterable import iterate, Iter
 
 base_read_process = {
     'steps': [
         {
             'func': 'remove_color',
             'kwargs': {}
+        },
+        {
+            "func": "threshold",
+            "kwargs": {
+                "size": Iter(range(15,25,2)),
+                "C": Iter(range(-10,10)),
+            }
+        },
+        {
+            "func": "add_border",
+            "kwargs": {
+                "border_size": 10
+            }
         },
         {
             'func': 'errode',

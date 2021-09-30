@@ -17,7 +17,7 @@ read_step = []
 to_string = False
 
 
-def init_preprocess(preprocess_file: str, string_out=True):
+def init_preprocess(preprocess_file: str):
     """
     initialize the procedure from file names containing the json data
     :param preprocess_file: the file of preprocessing
@@ -25,8 +25,7 @@ def init_preprocess(preprocess_file: str, string_out=True):
     :return:
     """
     global preprocess_steps
-    global to_string
-    to_string = string_out
+
     with open(preprocess_file, 'r') as f:
         preprocess_steps = gen_step(f.read())
 
@@ -47,6 +46,7 @@ def init_read(read_file = r"ImgTreatement/configs/read.json", string_out=True):
     global to_string
     global read_step
 
+    to_string = string_out
     with open(read_file, 'r') as f:
         read_step = gen_step(f.read())
 

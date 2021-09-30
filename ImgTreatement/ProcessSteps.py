@@ -1,3 +1,7 @@
+"""
+Set of fonctions to process the image, that can be generated into a list from json files
+"""
+
 import json
 
 import numpy as np
@@ -63,6 +67,21 @@ def canny(img, **kwargs):
     """
     return cv.Canny(img, kwargs['threshold1'], kwargs['threshold2'], L2gradient=True)
 
+def threshold(img, **kwargs):
+    """
+    processs step
+    binarize the image according with an adaptive treshold
+    :param img: image to process, !must be grayscale
+    :param kwargs:
+        :keyword size: the value of the size of the area thresholded
+        :keyword C: constant for fine tuning
+    :return: processed image
+    """
+
+    img = cv.adaptiveThreshold(img, 255, cv.ADAPTIVE_THRESH_MEAN_C, cv.THRESH_BINARY, kwargs['size'], kwargs['C'])
+    return img
+
+
 
 def dilate(img, **kwargs):
     """
@@ -92,7 +111,6 @@ def errode(img, **kwargs):
     return cv.erode(img, np.ones((kwargs['kernelx'], kwargs['kernely']), np.uint8), iterations=kwargs['iterations'])
 
 
-
 def invert(img, **kwargs):
     """
     processs step
@@ -102,6 +120,7 @@ def invert(img, **kwargs):
     :return: processed image
     """
     return cv.bitwise_not(img)
+
 
 def add_border(img, **kwargs):
     """
@@ -120,6 +139,7 @@ def add_border(img, **kwargs):
         borderType=cv.BORDER_CONSTANT,
         value=255,
     )
+
 
 def gen_step(json_data: str):
     data = json.loads(json_data)
