@@ -1,5 +1,7 @@
 import os
 
+import numpy as np
+
 from Generators.Iterable import iterate, Iter
 
 base_read_process = {
@@ -17,8 +19,8 @@ base_read_process = {
         {
             "func": "threshold",
             "kwargs": {
-                "size": Iter(range(3, 40, 2)),
-                "C": Iter(range(0, 25)),
+                "size": Iter(range(41, 81, 2)),
+                "C": Iter(np.arange(25, 45, 0.5)),
             }
         },
         {
