@@ -1,6 +1,10 @@
+"""
+Module for openOpc access. Bypass the function
+"""
+
 # used library only work with 32 bits interpreters raise error if not the case
 import struct
-
+from builtins import function
 
 n_bit = struct.calcsize("P") * 8
 if n_bit == 64:
@@ -23,11 +27,22 @@ address_trigger = 'M_Trigger_Camera'
 
 
 def get_text(server_name=default_opc_server):
+    """
+    Read the text
+    :param server_name: the server name, defaults to correct
+    :return:
+    """
     with OpcClient(server_name) as opc:
         return opc.opc.read(address_text, source='device')[0]
 
 
 def set_synchro(callback, server_name=default_opc_server):
+    """
+    set synchronisation callback
+    :param callback: the function to be called by the callback
+    :param server_name: the server name, defaults to correct
+    :return:
+    """
     global synchro
     if synchro is not None:
         synchro._callback = callback
@@ -37,23 +52,35 @@ def set_synchro(callback, server_name=default_opc_server):
 
 
 def get_repetions(server_name=default_opc_server):
+    """
+    Read repetitions
+    :param server_name: the server name, defaults to correct
+    :return:
+    """
     with OpcClient(server_name) as opc:
         return opc.opc.read(address_x_repeats, source='device')[0], opc.opc.read(address_y_repeats, source='device')[0]
 
 
 def kill_synchro():
+    """
+    disable the synchronisation callback
+    :return:
+    """
     global synchro
     # noinspection PyUnresolvedReferences
     synchro.stop()
 
 
 class Synchro:
-    _callback : function
-    _running : bool
-    _server_name : str
-    _thread : Thread
+    """
+    class for the synchronisation
+    """
+    _callback: function
+    _running: bool
+    _server_name: str
+    _thread: Thread
 
-    def __init__(self, callback:function, server_name: str):
+    def __init__(self, callback: function, server_name: str):
         self._callback = callback
         self._running = False
         self._server_name = server_name
@@ -83,6 +110,9 @@ class Synchro:
 
 
 class OpcClient:
+    """
+    OPC client, openable with a with statement
+    """
     def __init__(self, server_name=default_opc_server):
         self.opc = OpenOPC.client()
         self.server_name = server_name
@@ -93,6 +123,3 @@ class OpcClient:
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.opc.close()
-
-
-

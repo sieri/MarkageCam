@@ -1,3 +1,7 @@
+"""
+Stub of a more complex system of filters for requests
+"""
+
 class Filter:
     AND = "AND"
     OR = "OR"

@@ -1,3 +1,7 @@
+"""
+Module containing the data, database reader and cache
+"""
+
 import os
 import sqlite3
 
@@ -53,6 +57,7 @@ _currently_open = None
 
 
 class Data:
+    """ Base value for any entry """
     tableName = "INVALID"
 
     def __init__(self, id=None):
@@ -74,7 +79,7 @@ class Data:
 
 
 class DbConnector:
-    """Save an image on the database"""
+    """Data base connector"""
 
     def __init__(self, db_name="./db.sqlite3", mr="./img"):
         self.db_name = db_name
@@ -101,6 +106,11 @@ class DbConnector:
             self.db.close()
 
     def insert(self, data: Data):
+        """
+        Insert a data in the database
+        :param data: data to be added to the database
+        :return: None
+        """
         if data.id is not None:
             if debug:
                 print('No Insert, already in')
@@ -149,6 +159,7 @@ class DbConnector:
         return statement
 
     def read(self, data_type, clearFilter=True):
+        """read a data and all the corresponding cached value"""
         cur = self.db.cursor()
 
         # override to read from memory instead of DB
