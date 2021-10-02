@@ -1,9 +1,19 @@
+"""
+Provide a class that can be iterated over all the combination of values in a Json list
+"""
+
 import json
 
 iterables = []
 
 
 def iterate(base_process, folder):
+    """
+    Create the list based on a json parsable list/dict
+    :param base_process: the json parsable list/dict
+    :param folder: the folder to output the Json to
+    :return:
+    """
     # check number generated
     l = 1
     for it in iterables:
@@ -37,13 +47,25 @@ def iterate(base_process, folder):
 
 
 class Iter:
+    """
+    Class implemeneting the itering functionality
+    """
+
+
     def __init__(self, r):
+        """
+        :param r: list or range of value
+        """
         global iterables
         self.r = r
         self.i = 0
         iterables.append(self)
 
     def iter(self):
+        """
+        travers all the values sequentielly,
+        :return: True if wrapped over
+        """
         self.i += 1
         if self.i == len(self.r):
             self.reset()
@@ -51,13 +73,23 @@ class Iter:
         return False
 
     def get_val(self):
+        """
+        :return: The value
+        """
         return self.r[self.i]
 
     def reset(self):
+        """
+        reset the index to 0
+        :return:
+        """
         self.i = 0
 
 
 class IterEncoder(json.JSONEncoder):
+    """
+    Json encoder that manage iterable
+    """
     def default(self, o):
         if isinstance(o, Iter):
             return o.get_val()

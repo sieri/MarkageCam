@@ -18,7 +18,8 @@ local_debug = True
 
 class CamCalib(CameraBase):
     """
-    A basic camera access used as a viewfinder for the calibration
+    A camera access used as a viewfinder for the calibration,
+    also contain calibration methods
     """
 
     def __init__(self):
@@ -139,6 +140,12 @@ class CamCalib(CameraBase):
                     raise err
 
     def find_homography(self, corners=None,size=(9, 6)):
+        """
+        Find the homography in images
+        :param corners: The corner of the area to include
+        :param size: size of the chessboard used
+        :return: the perspective shift matrix, width and length of the image
+        """
         img = self._getter.read()
 
         grayscale = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
@@ -213,14 +220,29 @@ class CamCalib(CameraBase):
         return img_points, obj_points
 
     def focus_add(self):
+        """
+        Add focus
+        :return: None
+        """
         self._focus += self._focus_increment
         self._update_focus()
 
     def focus_sub(self):
+        """
+        substract to the focus
+        :return: None
+        """
         self._focus -= self._focus_increment
         self._update_focus()
 
     def calibrate(self, picture_corners, picture_width, picture_height):
+        """
+        Run the calibration
+        :param picture_corners: corners in the viewfinder
+        :param picture_width: width of the viewfinder
+        :param picture_height: height of the viewfinder
+        :return:
+        """
         width,height = self.get_img_size()
         corners = np.array([[x*width/picture_width,y*height/picture_height] for x,y in picture_corners])
         self._h, self._width, self._height = self.find_homography(corners=corners)
@@ -229,7 +251,11 @@ class CamCalib(CameraBase):
 
 
     def save(self, filename):
-
+        """
+        save the calibration data
+        :param filename: filename to save to
+        :return:
+        """
         with open(filename, 'w') as fp:
             try:
                 fp.write(
@@ -250,10 +276,20 @@ class CamCalib(CameraBase):
                 return False
 
     def _update_focus(self):
+        """
+        update the focus on the actual camera
+        :return:
+        """
         self._camera.set(cv.CAP_PROP_FOCUS, self._focus)
 
     @staticmethod
     def get_chessboard(i, size=(9, 6)):
+        """
+        Static method, find the corners in a chessboard
+        :param i: image to find it from
+        :param size: size of the chessboard used
+        :return:
+        """
         n = np.full_like(i, 255)
 
         found_pattern, corners = cv.findChessboardCorners(i, patternSize=size)

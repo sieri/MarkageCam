@@ -1,3 +1,7 @@
+"""
+Generate the read process with iteration in the folder /out/read_baseprocess
+"""
+
 import os
 
 import numpy as np

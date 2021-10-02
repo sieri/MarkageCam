@@ -1,4 +1,6 @@
-# Access to the camera and optical correction
+"""
+ Access to the camera and optical correction
+"""
 import json
 import time
 

@@ -11,12 +11,22 @@ from environement import display_fps, debug
 
 
 class DisplayBase():
+    """
+    Base class for the display
+    """
     def __init__(self, getter: ImageGetter):
+        """
+        :param getter: the image getter, initialized
+        """
         self._getter = getter
         self._thread = Thread(target=self.get, args=())
         self._thread.setName("Thread for display")
 
     def start(self):
+        """
+        start the thread
+        :return:
+        """
         self._stopped = False
         self._thread.start()
         return self

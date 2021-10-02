@@ -102,7 +102,7 @@ def script_detect(img, preprocessed):
         print(data)
 
     e_list.append(cv.getTickCount())
-
+    DebugDisplay.show_resized("img", DebugDisplay.display_data(data, img))
     if debug:
         print("\n==TIMING OCR SCRIPT DETECT")
         for index in range(len(e_list) - 1):

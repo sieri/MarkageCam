@@ -24,6 +24,10 @@ corrected_imgs_img = []
 
 
 def read_all():
+    """
+    Load all imgs from the database
+    :return: None
+    """
     global corrected_imgs
     global corrected_imgs_img
 
@@ -34,6 +38,12 @@ def read_all():
 
 
 def process_all():
+    """
+    Process all the read image and put them in the corresponding list
+
+    :return: None
+    """
+
     global preprocesseds
 
     img: DB.CorrectedImg
@@ -52,6 +62,12 @@ def process_all():
 
 
 def _show(container, start=-1, stop=-1):
+    """
+    Internal function showing a container
+    :param start: start of the range -1 for last
+    :param stop: end of the range -1 for lat
+    :return: None
+    """
     if start == stop:
         cont = [container[start]]
     else:
@@ -64,21 +80,33 @@ def _show(container, start=-1, stop=-1):
         print("No such value")
 
 
-def show_corrected(start=-1, stop=None):
+def show_corrected(start=-1, stop=-1):
+    """
+    Shows the corrected image according to the range parameters
+    :param start: start of the range -1 for last
+    :param stop: end of the range -1 for lat
+    :return: None
+    """
+
     _show(corrected_imgs, start, stop)
 
 
-def show_preprocessed(start=-1, stop=None):
+def show_preprocessed(start=-1, stop=-1):
+    """
+    Shows the preprocessed image according to the range parameters
+    :param start: start of the range -1 for last
+    :param stop: end of the range -1 for lat
+    :return: None
+    """
     _show(preprocesseds, start, stop)
 
 
 def kill_all():
+    """
+    Kill all openCV windows from show functions
+    :return:
+    """
     cv.destroyAllWindows()
-
-
-note_max = 1000
-penalty_char_missing = 5
-penalty_char_leftOver = 5
 
 
 def note_line(to_note: str, ref: str):
@@ -125,27 +153,28 @@ FIND_REFINED_PROC = 3
 if __name__ == '__main__':
     os.chdir('../')
 
-    mode = OCR_FIND_PROC
+    mode = OCR_TEST
 
     test_line = "This is the test plate ** 42 is the answer #"
 
     print(note_line("This is the test plate ** 42 is the answer #", test_line))
 
-    img = cv.imread('img.jpg')
-    if mode == OCR_TEST:
+    img = cv.imread('img_ponct.jpg')
+    if mode == OCR_TEST: # read a single image, img
         TreatImg.init_read(string_out=True)
         imgs = TreatImg.script_detect(img, img)
         print("Found %s lines" % len(imgs))
+
         for index, i in enumerate(imgs):
             #data, img = TreatImg.read_line(i)
-            s = TreatImg.read_line(i)
-            print(note_line(s,ref=test_line))
-            # DebugDisplay.show_resized("img", DebugDisplay.display_data(data, img))
+            data = TreatImg.read_line(i)
+            print("note:", note_line(data,ref=test_line))
+            #  DebugDisplay.show_resized("img", DebugDisplay.display_data(data, img))
             cv.imwrite('out/output%s.png' % index, img)
-            print(s)
+            print(data)
 
         cv.waitKey(0)
-    if mode == OCR_FIND_PROC:
+    if mode == OCR_FIND_PROC: # find the process for read
         if not os.path.exists('out/read_selected'):
             os.mkdir('out/read_selected')
 
@@ -178,8 +207,9 @@ if __name__ == '__main__':
         for f in min_files:
             copyfile(folder + f, 'out/read_selected/' + f)
 
-        cv.waitKey(0)
-    elif mode == FIND_BASE_PROC:
+
+
+    elif mode == FIND_BASE_PROC: # find the base process, all that find 7 lines
         if not os.path.exists('out/selected'):
             os.mkdir('out/selected')
         read_all()
@@ -197,7 +227,7 @@ if __name__ == '__main__':
             if correct:
                 copyfile(folder + filename, 'out/selected/' + filename)
 
-    elif mode == FIND_REFINED_PROC:
+    elif mode == FIND_REFINED_PROC: # find the base process, all that find readable lines
         if not os.path.exists('out/refined'):
             os.mkdir('out/refined')
         read_all()

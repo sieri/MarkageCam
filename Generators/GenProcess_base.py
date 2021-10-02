@@ -1,3 +1,7 @@
+"""
+Generate the OSD preprocess with iteration in the folder /out/baseprocess
+"""
+
 import os
 
 from Generators.Iterable import Iter, iterate
@@ -28,6 +32,7 @@ base_preprocess = {
     ]
 }
 base_preprocess_folder = "out/baseprocess"
+
 
 if __name__ == '__main__':
     os.chdir('../')
