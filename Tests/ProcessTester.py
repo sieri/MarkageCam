@@ -1,12 +1,11 @@
 import json
 import os
-import time
 
 import environement
 
 environement.debug = True
 
-from Data import DB, Filters
+from Data import DB
 
 from ImgTreatement import TreatImg, DebugDisplay
 
@@ -75,33 +74,6 @@ def kill_all():
 if __name__ == '__main__':
     os.chdir('../')
 
-    base_process = {
-        'steps': [
-            {
-                'func': 'remove_color',
-                'kwargs': {}
-            },
-            {
-                'func': 'mask',
-                'kwargs': {'avg': True, 'val':128}
-            },
-            {
-                'func': 'canny',
-                'kwargs': {'threshold1': 50, 'threshold2': 100}
-            },
-            {
-                'func': 'dilate',
-                'kwargs': {'kernelx': 3, 'kernely': 3, 'iterations': 2}
-            },
-            {
-                'func': 'invert',
-                'kwargs': {}
-            },
-        ]
-    }
-
-    TreatImg.init_str(json.dumps(base_process))
-
     img = cv.imread('test_plater.png')
 
     imgs = TreatImg.script_detect(img, img)
@@ -109,5 +81,5 @@ if __name__ == '__main__':
     for i in imgs:
         TreatImg.read_line(i)
 
-    #show_preprocessed(0, 0)
+    # show_preprocessed(0, 0)
     cv.waitKey(0)
