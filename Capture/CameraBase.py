@@ -4,7 +4,9 @@ from Capture.CameraDisplay import TkDisplay, DebugDisplay
 from Capture.ImageGetter import ImageGetter
 
 class CameraBase:
-
+    """
+    Base class for specific cameras
+    """
     def __init__(self):
         self._camera = None  # a video capture stream
         self._getter = None # a thread getting the data

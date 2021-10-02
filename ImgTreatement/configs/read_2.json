@@ -1,0 +1,30 @@
+{
+  "steps": [
+    {
+      "func": "remove_color",
+      "kwargs": {}
+    },
+    {
+      "func": "add_border",
+      "kwargs": {
+        "border_size": 10
+      }
+    },
+    {
+      "func": "errode",
+      "kwargs": {
+        "kernelx": 2,
+        "kernely": 2,
+        "iterations": 2
+      }
+    },
+    {
+      "func": "dilate",
+      "kwargs": {
+        "kernelx": 2,
+        "kernely": 2,
+        "iterations": 2
+      }
+    }
+  ]
+}

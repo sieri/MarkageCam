@@ -6,33 +6,57 @@ from environement import debug
 import cv2 as cv
 import pytesseract as tess
 from ImgTreatement.ProcessSteps import gen_step
+from ImgTreatement import ProcessSteps
 
 plotting = False
 
 tess.pytesseract.tesseract_cmd = "C:/Program Files/Tesseract-OCR/tesseract.exe"
 
 preprocess_steps = []
+read_step = []
+to_string = False
 
 
-def init(preprocess_file: str):
+def init_preprocess(preprocess_file: str):
     """
     initialize the procedure from file names containing the json data
-    :param preprocess_file:
+    :param preprocess_file: the file of preprocessing
+    :param string_out: Boolean toggling output in string, instead of data
     :return:
     """
     global preprocess_steps
+
     with open(preprocess_file, 'r') as f:
         preprocess_steps = gen_step(f.read())
 
 
-def init_str(preprocess_data: str):
+def init_preprocess_str(preprocess_data="""{"steps":[]}"""):
     """
     initiaise the procedures from string data
-    :param preprocess_data:
+    :param preprocess_data: preprocessing steps in json string
+    :param string_out: Boolean toggling output in string, instead of data
     :return: None
     """
     global preprocess_steps
+
     preprocess_steps = gen_step(preprocess_data)
+
+
+def init_read(read_file = r"ImgTreatement/configs/read.json", string_out=True):
+    global to_string
+    global read_step
+
+    to_string = string_out
+    with open(read_file, 'r') as f:
+        read_step = gen_step(f.read())
+
+
+def init_read_str(read_string="""{"steps":[]}""", string_out=True):
+    global to_string
+    global read_step
+
+    to_string = string_out
+    read_step = gen_step(read_string)
 
 
 def process(img: DB.CorrectedImg):
@@ -78,7 +102,7 @@ def script_detect(img, preprocessed):
         print(data)
 
     e_list.append(cv.getTickCount())
-
+    DebugDisplay.show_resized("img", DebugDisplay.display_data(data, img))
     if debug:
         print("\n==TIMING OCR SCRIPT DETECT")
         for index in range(len(e_list) - 1):
@@ -96,18 +120,30 @@ def script_detect(img, preprocessed):
             left = data['left'][i]
             top = data['top'][i]
 
-            new = img[top:top + height, left:left + width]
+            new = preprocessed[top:top + height, left:left + width]
             imgs.append(new)
 
     return imgs
 
 
 def read_line(img):
-    data = tess.image_to_data(
-        img,
-        lang='Dot_matrix',
-        output_type=tess.Output.DICT,
-        config='--psm 7'  # treat image line
-    )
-    DebugDisplay.show_resized("img",DebugDisplay.display_data(data, img))
-    print(data)
+
+    for step in read_step:
+        img = step[0](img, **step[1])
+
+    if to_string:
+        return tess.image_to_string(  # return the string
+            img,
+            lang='Dot_matrix',
+            output_type=tess.Output.STRING,
+            config='--psm 7'  # treat image line
+        ).strip()  # remove white space and characters at the end
+    else:
+        data = tess.image_to_data(
+            img,
+            lang='Dot_matrix',
+            output_type=tess.Output.DICT,
+            config='--psm 7'  # treat image line
+        )
+
+        return data, img

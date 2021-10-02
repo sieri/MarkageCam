@@ -1,8 +1,13 @@
+"""
+Set of fonctions to process the image, that can be generated into a list from json files
+"""
+
 import json
 
 import numpy as np
 import sys
 import cv2 as cv
+
 
 def remove_color(img, **kwargs):
     """
@@ -63,6 +68,36 @@ def canny(img, **kwargs):
     return cv.Canny(img, kwargs['threshold1'], kwargs['threshold2'], L2gradient=True)
 
 
+def threshold(img, **kwargs):
+    """
+    processs step
+    binarize the image according with an adaptive treshold
+    :param img: image to process, !must be grayscale
+    :param kwargs:
+        :keyword size: the value of the size of the area thresholded
+        :keyword C: constant for fine tuning
+    :return: processed image
+    """
+
+    img = cv.adaptiveThreshold(img, 255, cv.ADAPTIVE_THRESH_MEAN_C, cv.THRESH_BINARY, kwargs['size'], kwargs['C'])
+    return img
+
+
+def resize(img, **kwargs):
+    """
+    processs step
+    resize for character height
+    :param img: image to process
+    :param kwargs:
+        :keyword size: the value of the size new height
+    :return: processed image
+    """
+    length = int(img.shape[1]*kwargs['size']/img.shape[0])
+    img = cv.resize(img, dsize=(length, kwargs['size']), interpolation=cv.INTER_LINEAR)
+    return img
+
+
+
 def dilate(img, **kwargs):
     """
     processs step
@@ -77,6 +112,20 @@ def dilate(img, **kwargs):
     return cv.dilate(img, np.ones((kwargs['kernelx'], kwargs['kernely']), np.uint8), iterations=kwargs['iterations'])
 
 
+def errode(img, **kwargs):
+    """
+    processs step
+    errde the image
+    :param img: image to process
+    :param kwargs:
+        :keyword kernelx: x value of a kernel
+        :keyword kernely: y value of a kernel
+        :keyword iterations: number of iteration
+    :return: processed image
+    """
+    return cv.erode(img, np.ones((kwargs['kernelx'], kwargs['kernely']), np.uint8), iterations=kwargs['iterations'])
+
+
 def invert(img, **kwargs):
     """
     processs step
@@ -86,6 +135,25 @@ def invert(img, **kwargs):
     :return: processed image
     """
     return cv.bitwise_not(img)
+
+
+def add_border(img, **kwargs):
+    """
+    processs step
+    adds borders to an image, BW only
+    :param img: image to process
+    :param kwargs: None
+    :return: processed image
+    """
+    return cv.copyMakeBorder(
+        src=img,
+        top=kwargs["border_size"],
+        bottom=kwargs["border_size"],
+        left=kwargs["border_size"],
+        right=kwargs["border_size"],
+        borderType=cv.BORDER_CONSTANT,
+        value=255,
+    )
 
 
 def gen_step(json_data: str):

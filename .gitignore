@@ -4,7 +4,9 @@ venv32/
 *.json
 *.sqlite3
 img/
+out/
 
 !installers/
 installers/*
 !installers/*.bat
+!ImgTreatement/configs/*.json

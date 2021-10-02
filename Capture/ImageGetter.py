@@ -14,7 +14,10 @@ class ImageGetter:
     """
 
     def __init__(self, capture):
+        """
 
+        :param capture: OPENCV videoCaputre linking to the stream or camera
+        """
         self._thread = Thread(target=self.get, args=())
         self._thread.setName("Camera capture")
         self._capture = capture
@@ -34,11 +37,19 @@ class ImageGetter:
                 )
 
     def start(self):
+        """
+        start the processus
+        :return: self, for chaining calls
+        """
         self.stopped = False
         self._thread.start()
         return self
 
     def get(self):
+        """
+        get the image, loop till the end
+        :return:
+        """
         while not self.stopped:
             grabbed, image = self._capture.read()
 
@@ -59,7 +70,15 @@ class ImageGetter:
         self._capture.release()
 
     def read(self):
+        """
+        read the image
+        :return the image
+        """
         return self._queue.get()
 
     def stop(self):
+        """
+        stop the currently running thread
+        :return: None
+        """
         self.stopped = True
