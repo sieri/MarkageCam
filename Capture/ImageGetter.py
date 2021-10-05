@@ -6,6 +6,7 @@ import numpy as np
 
 from environement import fish_eye_correction, fish_eye_parametter
 
+
 class ImageGetter:
     """
         Base class for the display. runs in a separate thread
@@ -27,7 +28,7 @@ class ImageGetter:
         if fish_eye_correction:
             with open(fish_eye_parametter) as fp:
                 param = json.load(fp)
-                self.map1, self.map2 = cv.fisheye.initUndistortRectifyMap(
+                self._map1, self._map2 = cv.fisheye.initUndistortRectifyMap(
                     np.array(param['K']),
                     np.array(param['D']),
                     np.eye(3),
@@ -54,7 +55,7 @@ class ImageGetter:
             grabbed, image = self._capture.read()
 
             if fish_eye_correction:
-                image = cv.remap(image, self.map1, self.map2, interpolation=cv.INTER_LINEAR, borderMode=cv.BORDER_CONSTANT)
+                image = cv.remap(image, self._map1, self._map2, interpolation=cv.INTER_LINEAR, borderMode=cv.BORDER_CONSTANT)
 
             if grabbed:
 
